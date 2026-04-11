@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   defaultOnboardingData,
   industrySpecificQuestions,
@@ -21,9 +22,9 @@ const STEPS: { title: string; description: string }[] = [
 ];
 
 export function OnboardingForm() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
-  const [submitted, setSubmitted] = useState(false);
 
   const roleQuestions = useMemo(() => industrySpecificQuestions[data.industry] ?? [], [data.industry]);
 
@@ -45,21 +46,8 @@ export function OnboardingForm() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     localStorage.setItem("onboarding_profile", JSON.stringify(data));
-    setSubmitted(true);
+    router.push("/dashboard");
   };
-
-  if (submitted) {
-    return (
-      <div className="card">
-        <h2>Setup complete</h2>
-        <p>
-          Your answers were saved locally as <code>onboarding_profile</code>. Next step: send this object
-          to your backend <code>/setup/generate</code> endpoint.
-        </p>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      </div>
-    );
-  }
 
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
 
