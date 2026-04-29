@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   defaultOnboardingData,
   industrySpecificQuestions,
@@ -12,7 +11,7 @@ import {
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5;
 
-const STEPS: { title: string; description: string }[] = [
+const STEPS = [
   { title: "Business basics", description: "Tell us what kind of business you run." },
   { title: "How you work", description: "Help us understand your daily operations." },
   { title: "Pain points", description: "Pick your biggest workflow bottlenecks." },
@@ -22,44 +21,69 @@ const STEPS: { title: string; description: string }[] = [
 ];
 
 export function OnboardingForm() {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
+  const [submitted, setSubmitted] = useState(false);
 
-  const roleQuestions = useMemo(() => industrySpecificQuestions[data.industry] ?? [], [data.industry]);
+  const roleQuestions = useMemo(
+    () => industrySpecificQuestions[data.industry] ?? [],
+    [data.industry]
+  );
 
-  const updateField = <K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) => {
+  const updateField = <K extends keyof OnboardingData>(
+    key: K,
+    value: OnboardingData[K]
+  ) => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
   const toggleInList = (field: "painPoints" | "tools", value: string) => {
     setData((prev) => {
-      const hasValue = prev[field].includes(value);
-      const next = hasValue ? prev[field].filter((item) => item !== value) : [...prev[field], value];
+      const has = prev[field].includes(value);
+      const next = has
+        ? prev[field].filter((i) => i !== value)
+        : [...prev[field], value];
       return { ...prev, [field]: next };
     });
   };
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 5) as Step);
-  const previousStep = () => setStep((prev) => Math.max(prev - 1, 0) as Step);
+  const nextStep = () => setStep((s) => Math.min(s + 1, 5) as Step);
+  const previousStep = () => setStep((s) => Math.max(s - 1, 0) as Step);
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
     localStorage.setItem("onboarding_profile", JSON.stringify(data));
-    router.push("/dashboard");
+    setSubmitted(true);
   };
+
+  if (submitted) {
+    return (
+      <div className="card">
+        <h2>Setup complete</h2>
+        <p>
+          Your answers were saved locally as <code>onboarding_profile</code>.
+        </p>
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      </div>
+    );
+  }
 
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
 
   return (
     <form className="card" onSubmit={handleSubmit}>
-      <p className="eyebrow">Step {step + 1} of {STEPS.length}</p>
+      <p className="eyebrow">
+        Step {step + 1} of {STEPS.length}
+      </p>
+
       <h2>{STEPS[step].title}</h2>
       <p>{STEPS[step].description}</p>
+
       <div className="progress">
         <div style={{ width: `${progress}%` }} />
       </div>
 
+      {/* STEP 0 */}
       {step === 0 && (
         <section className="fields">
           <label>
@@ -70,9 +94,14 @@ export function OnboardingForm() {
               onChange={(e) => updateField("businessName", e.target.value)}
             />
           </label>
+
           <label>
             Industry
-            <select value={data.industry} onChange={(e) => updateField("industry", e.target.value)} required>
+            <select
+              value={data.industry}
+              onChange={(e) => updateField("industry", e.target.value)}
+              required
+            >
               <option value="">Select industry</option>
               <option value="carpentry">Carpentry</option>
               <option value="salon">Salon</option>
@@ -82,9 +111,18 @@ export function OnboardingForm() {
               <option value="other">Other</option>
             </select>
           </label>
+
           <label>
             Team size
-            <select value={data.teamSize} onChange={(e) => updateField("teamSize", e.target.value as OnboardingData["teamSize"])}>
+            <select
+              value={data.teamSize}
+              onChange={(e) =>
+                updateField(
+                  "teamSize",
+                  e.target.value as OnboardingData["teamSize"]
+                )
+              }
+            >
               <option value="solo">Just me</option>
               <option value="2_5">2-5</option>
               <option value="6_15">6-15</option>
@@ -94,93 +132,112 @@ export function OnboardingForm() {
         </section>
       )}
 
+      {/* STEP 1 */}
       {step === 1 && (
         <section className="fields">
           <label>
             Revenue model
             <select
               value={data.revenueModel}
-              onChange={(e) => updateField("revenueModel", e.target.value as OnboardingData["revenueModel"])}
+              onChange={(e) =>
+                updateField(
+                  "revenueModel",
+                  e.target.value as OnboardingData["revenueModel"]
+                )
+              }
             >
               <option value="appointments">Appointments</option>
-              <option value="projects">Projects/jobs</option>
-              <option value="products">Product sales</option>
+              <option value="projects">Projects</option>
+              <option value="products">Products</option>
               <option value="subscription">Subscription</option>
               <option value="mixed">Mixed</option>
             </select>
           </label>
+
           <label>
             Work mode
-            <select value={data.workMode} onChange={(e) => updateField("workMode", e.target.value as OnboardingData["workMode"])}>
-              <option value="on_site">At a location/shop</option>
-              <option value="client_site">At client sites</option>
-              <option value="hybrid">Both</option>
+            <select
+              value={data.workMode}
+              onChange={(e) =>
+                updateField(
+                  "workMode",
+                  e.target.value as OnboardingData["workMode"]
+                )
+              }
+            >
+              <option value="on_site">On-site</option>
+              <option value="client_site">Client site</option>
+              <option value="hybrid">Hybrid</option>
             </select>
           </label>
         </section>
       )}
 
+      {/* STEP 2 */}
       {step === 2 && (
         <section className="chips">
-          {PAIN_POINTS.map((painPoint) => (
+          {PAIN_POINTS.map((p) => (
             <button
-              className={data.painPoints.includes(painPoint) ? "chip active" : "chip"}
-              key={painPoint}
-              onClick={(e) => {
-                e.preventDefault();
-                toggleInList("painPoints", painPoint);
-              }}
+              key={p}
+              type="button"
+              className={
+                data.painPoints.includes(p) ? "chip active" : "chip"
+              }
+              onClick={() => toggleInList("painPoints", p)}
             >
-              {painPoint.replaceAll("_", " ")}
+              {p.replaceAll("_", " ")}
             </button>
           ))}
+
           <label>
-            What would save you the most time each week?
+            What would save you time?
             <textarea
               value={data.timeSavingFocus}
-              onChange={(e) => updateField("timeSavingFocus", e.target.value)}
-              placeholder="Example: Faster quote approvals and automatic invoice reminders"
+              onChange={(e) =>
+                updateField("timeSavingFocus", e.target.value)
+              }
             />
           </label>
         </section>
       )}
 
+      {/* STEP 3 */}
       {step === 3 && (
         <section className="chips">
-          {TOOLS.map((tool) => (
+          {TOOLS.map((t) => (
             <button
-              className={data.tools.includes(tool) ? "chip active" : "chip"}
-              key={tool}
-              onClick={(e) => {
-                e.preventDefault();
-                toggleInList("tools", tool);
-              }}
+              key={t}
+              type="button"
+              className={data.tools.includes(t) ? "chip active" : "chip"}
+              onClick={() => toggleInList("tools", t)}
             >
-              {tool.replaceAll("_", " ")}
+              {t.replaceAll("_", " ")}
             </button>
           ))}
         </section>
       )}
 
+      {/* STEP 4 */}
       {step === 4 && (
         <section className="fields">
           {roleQuestions.length === 0 ? (
-            <p>No additional questions for this industry yet.</p>
+            <p>No extra questions</p>
           ) : (
-            roleQuestions.map((question) => (
-              <label key={question.key}>
-                {question.label}
+            roleQuestions.map((q) => (
+              <label key={q.key}>
+                {q.label}
                 <select
-                  value={data.roleAnswers[question.key] ?? ""}
+                  value={data.roleAnswers[q.key] ?? ""}
                   onChange={(e) =>
-                    updateField("roleAnswers", { ...data.roleAnswers, [question.key]: e.target.value })
+                    updateField("roleAnswers", {
+                      ...data.roleAnswers,
+                      [q.key]: e.target.value
+                    })
                   }
                 >
-                  <option value="">Select one</option>
-                  {question.options.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
+                  <option value="">Select</option>
+                  {q.options.map((opt) => (
+                    <option key={opt}>{opt}</option>
                   ))}
                 </select>
               </label>
@@ -189,25 +246,28 @@ export function OnboardingForm() {
         </section>
       )}
 
+      {/* STEP 5 */}
       {step === 5 && (
-        <section className="fields">
-          <p>Review your onboarding profile before completing setup.</p>
+        <section>
           <pre>{JSON.stringify(data, null, 2)}</pre>
         </section>
       )}
 
       <div className="actions">
-        <button type="button" className="button ghost" disabled={step === 0} onClick={previousStep}>
+        <button
+          type="button"
+          onClick={previousStep}
+          disabled={step === 0}
+        >
           Back
         </button>
+
         {step < 5 ? (
-          <button type="button" className="button" onClick={nextStep}>
+          <button type="button" onClick={nextStep}>
             Continue
           </button>
         ) : (
-          <button type="submit" className="button">
-            Complete setup
-          </button>
+          <button type="submit">Finish</button>
         )}
       </div>
     </form>
