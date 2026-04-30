@@ -1,18 +1,13 @@
-import { initializeApp, getApps } from "firebase/app";
-import { firebaseConfig } from "./firebaseConfig";
+// Firebase integration is not yet active.
+// Replace this stub with real Firebase calls when the firebase package is added.
 
 class FirebaseBackend {
   private initialized = false;
 
   async initialize() {
     if (this.initialized) return;
-
-    if (!getApps().length) {
-      initializeApp(firebaseConfig);
-    }
-
     this.initialized = true;
-    console.log("Firebase initialized");
+    console.log("Firebase initialized (stub)");
   }
 
   isAvailable() {

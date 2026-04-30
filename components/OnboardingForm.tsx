@@ -26,7 +26,7 @@ export function OnboardingForm() {
   const [submitted, setSubmitted] = useState(false);
 
   const roleQuestions = useMemo(
-    () => industrySpecificQuestions[data.industry] ?? [],
+    () => (data.industry ? industrySpecificQuestions[data.industry] : undefined) ?? [],
     [data.industry]
   );
 
@@ -99,7 +99,7 @@ export function OnboardingForm() {
             Industry
             <select
               value={data.industry}
-              onChange={(e) => updateField("industry", e.target.value)}
+              onChange={(e) => updateField("industry", e.target.value as OnboardingData["industry"])}
               required
             >
               <option value="">Select industry</option>
