@@ -9,12 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "next": "^15.2.3",
-=======
-    "@tailwindcss/postcss": "^4.2.2",
-    "next": "15.2.0",
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
+    "firebase": "^12.12.0",
+    "groq-sdk": "^1.1.2",
+    "next": "^16.2.4",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
@@ -22,16 +19,12 @@
     "@types/node": "22.13.10",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
-<<<<<<< HEAD
     "eslint": "^9.39.4",
     "eslint-config-next": "^15.2.3",
-=======
-    "autoprefixer": "^10.5.0",
-    "eslint": "9.21.0",
-    "eslint-config-next": "15.2.0",
-    "postcss": "^8.5.10",
-    "tailwindcss": "^4.2.2",
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
     "typescript": "5.8.2"
+  },
+  "comments": {
+    "phase-2-dependencies": "Add these when starting Phase 2 integrations: stripe, @slack/bolt, resend, quickbooks-api, ical-generator",
+    "phase-3-dependencies": "Add for Phase 3 ML features: xgboost-learn, tensorflow.js, or scikit-learn (via Python microservice)"
   }
 }
