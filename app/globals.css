@@ -66,6 +66,26 @@ textarea {
   resize: vertical;
 }
 
+<<<<<<< HEAD
+=======
+.chipsSection {
+  display: grid;
+  gap: 12px;
+}
+
+.helperText {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.errorText {
+  margin: 0 0 12px;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+>>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -109,6 +129,14 @@ textarea {
   color: #111827;
 }
 
+<<<<<<< HEAD
+=======
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+>>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
 .back {
   color: #374151;
   text-decoration: none;
