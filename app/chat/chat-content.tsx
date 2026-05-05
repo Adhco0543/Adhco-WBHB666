@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { OnboardingData } from "@/lib/onboarding";
@@ -354,6 +354,8 @@ export default function ChatContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const savedProfile = localStorage.getItem("onboarding_profile");
@@ -381,6 +383,58 @@ export default function ChatContent() {
     const memoryKey = `assistant_chat_memory_${profile.role || "general"}`;
     localStorage.setItem(memoryKey, JSON.stringify(messages));
   }, [messages, profile]);
+
+  // Initialize Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          setInput((prev) => prev + transcript + " ");
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      setInput(""); // Clear input to start fresh
+      recognitionRef.current.start();
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -604,6 +658,15 @@ export default function ChatContent() {
               {isLoading ? "Thinking..." : "Send"}
             </button>
 
+            <button
+              className={`button ${isListening ? "listening" : ""}`}
+              type="button"
+              onClick={isListening ? stopListening : startListening}
+              title={isListening ? "Stop listening" : "Click to speak"}
+            >
+              {isListening ? "🎤 Listening..." : "🎤 Talk"}
+            </button>
+
             <button className="button ghost" type="button" onClick={clearMemory}>
               Clear Memory
             </button>
@@ -648,6 +711,21 @@ export default function ChatContent() {
         button.button {
           border: none;
           cursor: pointer;
+        }
+
+        button.button.listening {
+          background: #ef4444;
+          color: white;
+          animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
+          }
         }
       `}</style>
     </main>
