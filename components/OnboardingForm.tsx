@@ -12,6 +12,7 @@ import {
   type UserRole,
   type TeamSize,
 } from "@/lib/onboarding";
+import { saveOnboardingProfile } from "@/lib/firebase";
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -28,6 +29,8 @@ export function OnboardingForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const roleQuestions = useMemo(() => {
     if (!data.role) return [];
@@ -68,8 +71,25 @@ export function OnboardingForm() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    localStorage.setItem("onboarding_profile", JSON.stringify(data));
-    router.push("/dashboard");
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    // Save to Firebase (with localStorage fallback)
+    saveOnboardingProfile(data)
+      .then((result) => {
+        if (result.success) {
+          // Navigate to dashboard
+          router.push("/dashboard");
+        } else {
+          setSubmitError(result.error || "Failed to save profile. Please try again.");
+          setIsSubmitting(false);
+        }
+      })
+      .catch((error) => {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        setSubmitError(errorMessage);
+        setIsSubmitting(false);
+      });
   };
 
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
@@ -246,12 +266,28 @@ export function OnboardingForm() {
         </section>
       )}
 
+      {submitError && (
+        <div
+          style={{
+            backgroundColor: "#fee",
+            border: "2px solid #f44",
+            borderRadius: "8px",
+            padding: "1rem",
+            marginBottom: "1rem",
+            color: "#c00",
+            fontSize: "0.95rem"
+          }}
+        >
+          <strong>Error:</strong> {submitError}
+        </div>
+      )}
+
       <div className="actions">
         <button
           type="button"
           onClick={previousStep}
-          disabled={step === 0}
-          style={{ opacity: step === 0 ? 0.5 : 1 }}
+          disabled={step === 0 || isSubmitting}
+          style={{ opacity: step === 0 || isSubmitting ? 0.5 : 1 }}
         >
           Back
         </button>
@@ -261,6 +297,7 @@ export function OnboardingForm() {
             type="button"
             onClick={nextStep}
             disabled={
+              isSubmitting ||
               (step === 0 && (!data.role || !data.industry)) ||
               (step === 1 && !data.businessName)
             }
@@ -268,7 +305,9 @@ export function OnboardingForm() {
             Continue
           </button>
         ) : (
-          <button type="submit">Get Started</button>
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Get Started"}
+          </button>
         )}
       </div>
     </form>

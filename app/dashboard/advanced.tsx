@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import type { OnboardingData } from "@/lib/onboarding";
 import { generateSmartSuggestions, generateDailyBrief, type DashboardSuggestion, type DailyBrief } from "@/lib/dashboardSuggestions";
+import { loadOnboardingProfile, initFirebaseOnStartup } from "@/lib/firebase";
 
 export default function AdvancedDashboardPage() {
   const [profile, setProfile] = useState<OnboardingData | null>(null);
@@ -11,19 +12,43 @@ export default function AdvancedDashboardPage() {
   const [dailyBrief, setDailyBrief] = useState<DailyBrief | null>(null);
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("onboarding_profile");
-    const dismissed = localStorage.getItem("dismissed_suggestions");
-    if (stored) {
-      const profileData = JSON.parse(stored);
-      setProfile(profileData);
-      setSuggestions(generateSmartSuggestions(profileData));
-      setDailyBrief(generateDailyBrief(profileData));
-    }
-    if (dismissed) {
-      setDismissedSuggestions(new Set(JSON.parse(dismissed)));
-    }
+    // Initialize Firebase on startup
+    initFirebaseOnStartup();
+
+    // Load profile from Firebase or localStorage
+    loadOnboardingProfile()
+      .then((result) => {
+        if (result.profile) {
+          setProfile(result.profile);
+          setSuggestions(generateSmartSuggestions(result.profile));
+          setDailyBrief(generateDailyBrief(result.profile));
+          console.log(`Profile loaded from ${result.source}`);
+        } else if (result.error) {
+          setLoadError(result.error);
+        }
+
+        // Load dismissed suggestions from localStorage
+        const dismissed = localStorage.getItem("dismissed_suggestions");
+        if (dismissed) {
+          try {
+            setDismissedSuggestions(new Set(JSON.parse(dismissed)));
+          } catch (e) {
+            console.warn("Failed to parse dismissed suggestions");
+          }
+        }
+      })
+      .catch((error) => {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
+        setLoadError(errorMessage);
+        console.error("Error loading profile:", errorMessage);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const categories = useMemo(() => {
@@ -49,6 +74,34 @@ export default function AdvancedDashboardPage() {
 
   const highPrioritySuggestions = filteredSuggestions.filter(s => s.priority === "high").slice(0, 2);
   const otherSuggestions = filteredSuggestions.filter(s => s.priority !== "high");
+
+  if (isLoading) {
+    return (
+      <main className="page">
+        <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
+          <h2>Loading dashboard...</h2>
+          <p style={{ marginTop: "1rem", color: "#666" }}>Please wait while we fetch your profile.</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="page">
+        <div className="card">
+          <h2 style={{ color: "#c00" }}>Error Loading Dashboard</h2>
+          <p style={{ color: "#666", marginTop: "1rem" }}>{loadError}</p>
+          <p style={{ fontSize: "0.9rem", color: "#999", marginTop: "1rem" }}>
+            Trying to load from local storage. If this persists, please complete onboarding again.
+          </p>
+          <Link className="button" href="/onboarding" style={{ marginTop: "1rem" }}>
+            Start Onboarding
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   if (!profile) {
     return (
