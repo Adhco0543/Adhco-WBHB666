@@ -462,19 +462,36 @@ export default function ChatContent() {
       }
 
       // Fallback to API if local logic doesn't match
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userText,
-          history: messages,
-          profile,
-          currentTask: task
-        })
-      });
+      let response;
+      try {
+        response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userText,
+            history: messages,
+            profile,
+            currentTask: task
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to get response");
+        if (!response.ok) {
+          // Check if it's a connection error (Ollama not running)
+          if (response.status >= 500) {
+            throw new Error(
+              "Can't reach the AI service. To enable chat responses, please start Ollama in a terminal:\n\n$ ollama serve\n\nFor now, try asking about quotes, emails, materials, or tasks - those work locally without Ollama!"
+            );
+          }
+          throw new Error("Failed to get response from API");
+        }
+      } catch (error) {
+        if (error instanceof TypeError) {
+          // Network error - likely Ollama not running
+          throw new Error(
+            "Can't reach the AI service. To enable open-ended chat, please start Ollama:\n\n$ ollama serve\n\nQuotes, emails, materials, and tasks work without it!"
+          );
+        }
+        throw error;
       }
 
       const data = await response.json();
