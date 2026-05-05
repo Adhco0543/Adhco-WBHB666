@@ -3,7 +3,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Adaptive Business Onboarding",
-  description: "AI-powered onboarding flow for local businesses"
+  description: "AI-powered onboarding flow for local businesses",
+  icons: {
+    icon: "/favicon.svg"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
