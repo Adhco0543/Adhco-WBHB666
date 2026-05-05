@@ -4,18 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { OnboardingData } from "@/lib/onboarding";
+import { saveOutput, saveTask, type SavedOutput, type Task } from "@/lib/assistantMemory";
 
 type Message = {
   role: "assistant" | "user";
   content: string;
-};
-
-type SavedOutput = {
-  id: string;
-  type: "quote" | "materials" | "note";
-  title: string;
-  content: string;
-  createdAt: string;
 };
 
 const roleOpeners: Record<string, string> = {
@@ -32,12 +25,6 @@ const roleOpeners: Record<string, string> = {
   other:
     "I'll adapt to your workflow and help organize tasks, reminders, planning, and next steps."
 };
-
-function saveOutput(output: SavedOutput) {
-  const saved = localStorage.getItem("assistant_outputs");
-  const outputs: SavedOutput[] = saved ? JSON.parse(saved) : [];
-  localStorage.setItem("assistant_outputs", JSON.stringify([output, ...outputs]));
-}
 
 function getTaskPrompt(task: string, taskName: string | null, profile: OnboardingData | null) {
   const role = profile?.role || "other";
@@ -156,11 +143,13 @@ Next Steps:
 3. Track progress`;
 }
 
-function generateReply(input: string, history: Message[], profile: OnboardingData | null): string | null {
+function generateReply(input: string, history: Message[], profile: OnboardingData | null, currentTask: string): { response: string; task?: Task } | null {
   const lower = input.toLowerCase();
   const memory = history.map((m) => m.content.toLowerCase()).join(" ");
 
-  // Check for dimensions follow-up logic to avoid repeating materials lists
+  // ============================================================================
+  // Pattern 1: Dimensions Follow-up (after materials discussion)
+  // ============================================================================
   const gaveDimensions =
     /\d+\s?(ft|feet|in|inch|inches|'|")/i.test(input) ||
     /\d+\s?x\s?\d+/i.test(input) ||
@@ -176,7 +165,8 @@ function generateReply(input: string, history: Message[], profile: OnboardingDat
     memory.includes("project details");
 
   if (wasBuildingMaterials && gaveDimensions) {
-    return `Perfect — now I can turn that into a usable next step.
+    return {
+      response: `Perfect — now I can turn that into a usable next step.
 
 SHOPPING LIST DRAFT
 
@@ -195,7 +185,142 @@ Next questions to tighten this list:
 1. What exactly are we building or repairing?
 2. Is it indoor or outdoor?
 3. What material do you prefer?
-4. Do you want this priced as budget, standard, or premium?`;
+4. Do you want this priced as budget, standard, or premium?`
+    };
+  }
+
+  // ============================================================================
+  // Pattern 2: Customer Info → Quote Draft
+  // ============================================================================
+  const hasCustomerInfo =
+    /customer|client|name|contact|email|phone/i.test(input) &&
+    memory.includes("quote");
+
+  const hasProjectScope =
+    /project|job|scope|work|scope of work/i.test(input) &&
+    (memory.includes("quote") || memory.includes("estimate"));
+
+  if ((hasCustomerInfo || hasProjectScope) && memory.includes("quote")) {
+    const businessName = profile?.businessName || "Your Business";
+    return {
+      response: `Got it! Here's a quote draft based on what you provided:
+
+QUOTE DRAFT
+
+Business: ${businessName}
+Prepared for: [Customer from: ${input.substring(0, 50)}...]
+Project: [From your input]
+Location: [Job location]
+
+Scope of Work:
+${input}
+
+Materials & Labor:
+[Refine with specific materials and labor costs]
+
+Total Estimate: $[Amount]
+Valid Until: [Date, typically 30 days]
+
+Next Steps:
+1. Review estimate details above
+2. Get materials pricing confirmed
+3. Send to customer for approval
+4. Schedule follow-up for questions`,
+      task: {
+        id: crypto.randomUUID(),
+        title: `Follow up on quote draft`,
+        description: `Review and send quote draft to customer`,
+        status: "pending",
+        priority: "high",
+        type: "quote_followup",
+        createdAt: new Date().toISOString()
+      }
+    };
+  }
+
+  // ============================================================================
+  // Pattern 3: Email Details → Email Draft
+  // ============================================================================
+  const gaveEmailDetails =
+    /email|send|message|recipient|subject|tone/i.test(input) &&
+    memory.includes("email");
+
+  if (gaveEmailDetails && memory.includes("email")) {
+    const businessName = profile?.businessName || "Your Business";
+    return {
+      response: `Perfect! Here's an email draft ready to send:
+
+EMAIL DRAFT
+
+Subject: [Suggested subject based on: ${input.substring(0, 40)}...]
+
+---
+
+Hi [Recipient name],
+
+${input}
+
+[Add any additional details or call-to-action]
+
+Best regards,
+${businessName}
+
+---
+
+Ready to send? You can copy this, make any edits, and send when ready.`
+    };
+  }
+
+  // ============================================================================
+  // Pattern 4: Due Date → Task/Reminder
+  // ============================================================================
+  const gaveDueDate =
+    /due|deadline|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+\/\d+|\d+-\d+-\d+|week|month|days?/i.test(
+      input
+    );
+
+  const wasTaskRelated =
+    memory.includes("task") ||
+    memory.includes("remind") ||
+    memory.includes("todo") ||
+    memory.includes("remember");
+
+  if (gaveDueDate && (wasTaskRelated || currentTask === "task")) {
+    const dueDate = input.match(/\d+-\d+-\d+|\d+\/\d+/)?.[0] || "To be confirmed";
+    return {
+      response: `Great! I've noted this task with the due date.
+
+TASK CREATED
+
+Title: ${input.substring(0, 50)}...
+Status: To Do
+Priority: [Based on timing]
+Due Date: ${dueDate}
+
+Description:
+${input}
+
+Checklist:
+[ ] Prepare
+[ ] Execute
+[ ] Complete
+[ ] Follow up
+
+Next Steps:
+1. Add to calendar
+2. Set reminders
+3. Track progress`,
+      task: {
+        id: crypto.randomUUID(),
+        title: input.substring(0, 50),
+        description: input,
+        dueDate: dueDate,
+        status: "pending",
+        priority: /urgent|asap|critical|high/i.test(input) ? "high" : /important|medium/i.test(input) ? "medium" : "low",
+        type: "task_reminder",
+        createdAt: new Date().toISOString()
+      }
+    };
   }
 
   // If no local logic matches, return null to fallback to API
@@ -255,26 +380,55 @@ export default function ChatContent() {
 
     try {
       // Try local generateReply first
-      const localResponse = generateReply(userText, messages, profile);
+      const localResult = generateReply(userText, messages, profile, task);
       
-      if (localResponse) {
+      if (localResult) {
         // Use local response
         const assistantMessage: Message = {
           role: "assistant",
-          content: localResponse
+          content: localResult.response
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
 
         // Save output if it's a draft
-        if (localResponse.includes("SHOPPING LIST DRAFT")) {
+        if (localResult.response.includes("SHOPPING LIST DRAFT")) {
           saveOutput({
             id: crypto.randomUUID(),
             type: "materials",
             title: "Shopping List Draft",
-            content: localResponse,
+            content: localResult.response,
             createdAt: new Date().toISOString()
           });
+        } else if (localResult.response.includes("QUOTE DRAFT")) {
+          saveOutput({
+            id: crypto.randomUUID(),
+            type: "quote",
+            title: "Quote Draft",
+            content: localResult.response,
+            createdAt: new Date().toISOString()
+          });
+        } else if (localResult.response.includes("EMAIL DRAFT")) {
+          saveOutput({
+            id: crypto.randomUUID(),
+            type: "email",
+            title: "Email Draft",
+            content: localResult.response,
+            createdAt: new Date().toISOString()
+          });
+        } else if (localResult.response.includes("TASK CREATED")) {
+          saveOutput({
+            id: crypto.randomUUID(),
+            type: "task",
+            title: "Task Created",
+            content: localResult.response,
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        // Save associated task if provided
+        if (localResult.task) {
+          saveTask(localResult.task);
         }
 
         setIsLoading(false);
@@ -314,14 +468,31 @@ export default function ChatContent() {
       // Save output if it's a draft
       if (
         data.response.includes("QUOTE DRAFT") ||
-        data.response.includes("MATERIALS LIST DRAFT")
+        data.response.includes("MATERIALS LIST DRAFT") ||
+        data.response.includes("EMAIL DRAFT") ||
+        data.response.includes("TASK CREATED")
       ) {
+        let outputType: "quote" | "materials" | "email" | "task" | "note" = "note";
+        let title = "Assistant Output";
+
+        if (data.response.includes("QUOTE DRAFT")) {
+          outputType = "quote";
+          title = "Quote Draft";
+        } else if (data.response.includes("MATERIALS LIST DRAFT")) {
+          outputType = "materials";
+          title = "Materials List Draft";
+        } else if (data.response.includes("EMAIL DRAFT")) {
+          outputType = "email";
+          title = "Email Draft";
+        } else if (data.response.includes("TASK CREATED")) {
+          outputType = "task";
+          title = "Task Created";
+        }
+
         saveOutput({
           id: crypto.randomUUID(),
-          type: data.response.includes("QUOTE DRAFT") ? "quote" : "materials",
-          title: data.response.includes("QUOTE DRAFT")
-            ? "Quote Draft"
-            : "Materials List Draft",
+          type: outputType,
+          title: title,
           content: data.response,
           createdAt: new Date().toISOString()
         });

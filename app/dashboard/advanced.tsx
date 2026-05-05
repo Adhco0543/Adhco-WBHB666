@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { OnboardingData } from "@/lib/onboarding";
 import { generateSmartSuggestions, generateDailyBrief, type DashboardSuggestion, type DailyBrief } from "@/lib/dashboardSuggestions";
 import { loadOnboardingProfile, initFirebaseOnStartup } from "@/lib/firebase";
+import { getRecentOutputs, getPendingTasks, getActivityFeed, type SavedOutput, type Task } from "@/lib/assistantMemory";
 
 export default function AdvancedDashboardPage() {
   const [profile, setProfile] = useState<OnboardingData | null>(null);
@@ -14,6 +15,9 @@ export default function AdvancedDashboardPage() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [recentOutputs, setRecentOutputs] = useState<SavedOutput[]>([]);
+  const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
+  const [activityFeed, setActivityFeed] = useState<any[]>([]);
 
   useEffect(() => {
     // Initialize Firebase on startup
@@ -40,6 +44,11 @@ export default function AdvancedDashboardPage() {
             console.warn("Failed to parse dismissed suggestions");
           }
         }
+
+        // Load recent outputs and tasks
+        setRecentOutputs(getRecentOutputs(5));
+        setPendingTasks(getPendingTasks());
+        setActivityFeed(getActivityFeed(5));
       })
       .catch((error) => {
         const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
@@ -246,6 +255,128 @@ export default function AdvancedDashboardPage() {
                   onDismiss={dismissSuggestion}
                   compact={true}
                 />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recent Assistant Work */}
+        {recentOutputs.length > 0 && (
+          <section className="card">
+            <p className="eyebrow">📋 RECENT ASSISTANT WORK</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
+              {recentOutputs.map(output => (
+                <Link 
+                  key={output.id}
+                  href={`/draft/${output.id}`}
+                  style={{
+                    display: "block",
+                    padding: "1rem",
+                    background: "#f9fafb",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    color: "#111827",
+                    transition: "all 0.2s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                    e.currentTarget.style.borderColor = "#2563eb";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.borderColor = "#e5e7eb";
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+                    <span style={{ fontSize: "1.25rem" }}>
+                      {output.type === "quote" && "💰"}
+                      {output.type === "materials" && "📦"}
+                      {output.type === "email" && "📧"}
+                      {output.type === "task" && "✓"}
+                      {output.type === "note" && "📝"}
+                    </span>
+                    <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "600" }}>{output.title}</h4>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.8rem", color: "#6b7280" }}>
+                    {new Date(output.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Pending Tasks */}
+        {pendingTasks.length > 0 && (
+          <section className="card">
+            <p className="eyebrow">🎯 PENDING TASKS ({pendingTasks.length})</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "1rem" }}>
+              {pendingTasks.slice(0, 5).map(task => (
+                <div
+                  key={task.id}
+                  style={{
+                    padding: "1rem",
+                    background: "#f3f4f6",
+                    border: `2px solid ${task.priority === "high" ? "#dc2626" : task.priority === "medium" ? "#f59e0b" : "#10b981"}`,
+                    borderRadius: "8px"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "1rem" }}>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "0.95rem", fontWeight: "600" }}>
+                        {task.title}
+                      </h4>
+                      {task.dueDate && (
+                        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#6b7280" }}>
+                          Due: {task.dueDate}
+                        </p>
+                      )}
+                    </div>
+                    <span style={{
+                      padding: "0.25rem 0.75rem",
+                      background: task.priority === "high" ? "#fee2e2" : task.priority === "medium" ? "#fef3c7" : "#d1fae5",
+                      color: task.priority === "high" ? "#991b1b" : task.priority === "medium" ? "#92400e" : "#065f46",
+                      borderRadius: "999px",
+                      fontSize: "0.75rem",
+                      fontWeight: "500",
+                      whiteSpace: "nowrap"
+                    }}>
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Activity Feed */}
+        {activityFeed.length > 0 && (
+          <section className="card">
+            <p className="eyebrow">📊 ACTIVITY FEED</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+              {activityFeed.map((item, idx) => (
+                <div
+                  key={item.id}
+                  style={{
+                    paddingBottom: idx !== activityFeed.length - 1 ? "1rem" : "0",
+                    borderBottom: idx !== activityFeed.length - 1 ? "1px solid #e5e7eb" : "none"
+                  }}
+                >
+                  <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.9rem", fontWeight: "500", color: "#111827" }}>
+                    {item.type === "draft_created" && "📝"} 
+                    {item.type === "chat" && "💬"}
+                    {item.type === "task_created" && "✓"}
+                    {item.type === "quote_sent" && "💼"}
+                    {item.type === "materials_ordered" && "📦"}
+                    {" "}{item.title}
+                  </p>
+                  <p style={{ margin: "0", fontSize: "0.8rem", color: "#6b7280" }}>
+                    {new Date(item.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
               ))}
             </div>
           </section>
