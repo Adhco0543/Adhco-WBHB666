@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   getConnectedIntegrations,
-  getIntegrationConfig,
   saveIntegrationConfig,
   removeIntegrationConfig,
   type IntegrationName,
@@ -61,7 +60,7 @@ export default function IntegrationsPage() {
   const [connectedIntegrations, setConnectedIntegrations] = useState<IntegrationName[]>([]);
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationName | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [config, setConfig] = useState<Record<string, any>>({});
+  const [, setConfig] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
 
   useEffect(() => {

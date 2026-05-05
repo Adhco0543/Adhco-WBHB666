@@ -20,7 +20,7 @@ export class SlackIntegration extends IntegrationBase {
     if (!this.credentials.botToken) return null;
 
     try {
-      const slackMessage = {
+      const _slackMessage = {
         channel: this.credentials.channelId || "#tasks",
         blocks: [
           {
@@ -87,7 +87,7 @@ export class SlackIntegration extends IntegrationBase {
     if (!this.credentials.botToken) return false;
 
     try {
-      const reminderMessage = {
+      const _reminderMessage = {
         channel: this.credentials.channelId || "#tasks",
         text: `✅ Task completed: ${task.title}`
       };
@@ -115,7 +115,7 @@ export class SlackIntegration extends IntegrationBase {
     if (overdueTasks.length === 0) return false;
 
     try {
-      const message = {
+      const _message = {
         channel: this.credentials.channelId || "#tasks",
         blocks: [
           {

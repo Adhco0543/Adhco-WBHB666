@@ -24,7 +24,7 @@ export class GoogleCalendarIntegration extends IntegrationBase {
     if (!this.credentials.accessToken) return null;
 
     try {
-      const event = {
+      const _event = {
         summary: task.title,
         description: task.description,
         start: task.dueDate

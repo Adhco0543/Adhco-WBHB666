@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
  * - Playbook generation with predicted impact
  */
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Detect patterns in user's data
     // TODO: Generate playbook recommendations
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, playbookId } = await request.json();
+    const { action, _playbookId } = await request.json();
 
     if (action === "apply-playbook") {
       // TODO: Apply playbook recommendation to user's settings

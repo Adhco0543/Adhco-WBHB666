@@ -33,7 +33,7 @@ export class IntegrationBase {
       const result = await this.validateConnection();
       this.status = result ? "connected" : "error";
       return result;
-    } catch (error) {
+    } catch (_error) {
       this.status = "error";
       return false;
     }
@@ -57,21 +57,21 @@ export class IntegrationBase {
   /**
    * Sync task to external service (override in subclasses)
    */
-  async syncTask(task: Task): Promise<string | null> {
+  async syncTask(_task: Task): Promise<string | null> {
     return null;
   }
 
   /**
    * Sync task completion to external service
    */
-  async syncTaskCompletion(task: Task): Promise<boolean> {
+  async syncTaskCompletion(_task: Task): Promise<boolean> {
     return false;
   }
 
   /**
    * Delete synced task from external service
    */
-  async deleteSyncedTask(task: Task): Promise<boolean> {
+  async deleteSyncedTask(_task: Task): Promise<boolean> {
     return false;
   }
 }

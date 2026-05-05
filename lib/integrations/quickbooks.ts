@@ -29,7 +29,7 @@ export class QuickBooksIntegration extends IntegrationBase {
     if (!this.credentials.accessToken) return null;
 
     try {
-      const invoice = {
+      const _invoice = {
         DocNumber: `INV-${Date.now()}`,
         CustomerRef: {
           value: data.customerId
@@ -76,7 +76,7 @@ export class QuickBooksIntegration extends IntegrationBase {
     if (!this.credentials.accessToken) return null;
 
     try {
-      const estimate = {
+      const _estimate = {
         DocNumber: `EST-${Date.now()}`,
         CustomerRef: {
           value: data.customerId
@@ -105,7 +105,7 @@ export class QuickBooksIntegration extends IntegrationBase {
   /**
    * Get customer info from QuickBooks
    */
-  async getCustomer(customerId: string): Promise<Record<string, any> | null> {
+  async getCustomer(customerId: string): Promise<Record<string, string> | null> {
     if (!this.credentials.accessToken) return null;
 
     try {
@@ -132,7 +132,7 @@ export class QuickBooksIntegration extends IntegrationBase {
     if (!this.credentials.accessToken) return null;
 
     try {
-      const expense = {
+      const _expense = {
         DocNumber: `EXP-${task.id}`,
         TxnDate: new Date().toISOString().split("T")[0],
         Line: [

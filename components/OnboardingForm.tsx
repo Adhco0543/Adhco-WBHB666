@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   defaultOnboardingData,
   roleSpecificQuestions,
@@ -9,6 +10,7 @@ import {
   ROLE_OPTIONS,
   TOOLS,
   type UserRole,
+  type TeamSize,
 } from "@/lib/onboarding";
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5;
@@ -23,9 +25,9 @@ const STEPS = [
 ];
 
 export function OnboardingForm() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
-  const [submitted, setSubmitted] = useState(false);
 
   const roleQuestions = useMemo(() => {
     if (!data.role) return [];
@@ -67,16 +69,8 @@ export function OnboardingForm() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     localStorage.setItem("onboarding_profile", JSON.stringify(data));
-    window.location.href = "/dashboard";
+    router.push("/dashboard");
   };
-  if (submitted) {
-    return (
-      <div className="card">
-        <h2>Setup complete</h2>
-        <p>Your profile was saved. Ready to work!</p>
-      </div>
-    );
-  }
 
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
 
@@ -146,7 +140,7 @@ export function OnboardingForm() {
             <select
               id="teamSize"
               value={data.teamSize}
-              onChange={(e) => updateField("teamSize", e.target.value as any)}
+              onChange={(e) => updateField("teamSize", e.target.value as TeamSize)}
               required
             >
               <option value="solo">Solo</option>

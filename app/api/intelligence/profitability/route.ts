@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { quoteData } = await request.json();
+    const { action, _quoteData } = await request.json();
 
     // TODO: Load trained ML model
     // TODO: Featurize quote data

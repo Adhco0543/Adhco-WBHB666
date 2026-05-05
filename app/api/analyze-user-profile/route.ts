@@ -64,9 +64,8 @@ Examples:
     });
 
     if (!response.ok) {
-      const error = await response.json();
       return NextResponse.json(
-        { error: error.error?.message || "Claude API error" },
+        { error: "Failed to analyze profile with Claude API" },
         { status: response.status }
       );
     }
@@ -79,7 +78,7 @@ Examples:
     let analysis;
     try {
       analysis = JSON.parse(analysisText);
-    } catch (e) {
+    } catch (_e) {
       console.error("Failed to parse Claude response:", analysisText);
       return NextResponse.json(
         { error: "Failed to analyze profile. Please try again." },

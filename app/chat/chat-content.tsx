@@ -156,51 +156,6 @@ Next Steps:
 3. Track progress`;
 }
 
-function smartSplitResponse(input: string) {
-  // Summarize user input and suggest next action
-  if (
-    input.toLowerCase().includes("quote") ||
-    input.toLowerCase().includes("estimate")
-  ) {
-    return (
-      "Got it. Let me create a quote template. " +
-      generateQuote(input, null)
-    );
-  }
-
-  if (
-    input.toLowerCase().includes("material") ||
-    input.toLowerCase().includes("supply")
-  ) {
-    return (
-      "Perfect. Here's a materials list template. " +
-      generateMaterialsList(input)
-    );
-  }
-
-  if (
-    input.toLowerCase().includes("email") ||
-    input.toLowerCase().includes("message")
-  ) {
-    return (
-      "Sure, let me draft an email for you. " +
-      generateEmail(input, null)
-    );
-  }
-
-  if (
-    input.toLowerCase().includes("task") ||
-    input.toLowerCase().includes("todo")
-  ) {
-    return (
-      "Alright, creating a task for you. " +
-      generateTask(input)
-    );
-  }
-
-  return "I'm tracking this like a contractor assistant. Send me the job details, and I'll help with quote, materials, follow-up, or next steps.";
-}
-
 export default function ChatContent() {
   const searchParams = useSearchParams();
   const task = searchParams.get("task") || "chat";

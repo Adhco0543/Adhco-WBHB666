@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, data } = await request.json();
+    const { action, _data } = await request.json();
 
     if (action === "oauth-callback") {
       // TODO: Handle OAuth callback from Slack

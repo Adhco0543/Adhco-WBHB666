@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
  * - Recommend optimal re-contact timing
  */
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Get churn risk scores for all customers
     // TODO: Sort by risk level
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, customerId } = await request.json();
+    const { action, _customerId } = await request.json();
 
     if (action === "get-reengagement-message") {
       // TODO: Generate personalized re-engagement message for customer

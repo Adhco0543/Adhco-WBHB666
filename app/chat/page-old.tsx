@@ -125,7 +125,7 @@ Next Step:
 Add exact dimensions and I’ll help tighten this into a shopping-ready list.`;
 }
 
-function generateReply(input: string, history: Message[], profile: OnboardingData | null) {
+function _generateReply(input: string, history: Message[], profile: OnboardingData | null) {
   const lower = input.toLowerCase();
   const memory = history.map((m) => m.content.toLowerCase()).join(" ");
   const role = profile?.role || "other";

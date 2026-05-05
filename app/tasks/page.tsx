@@ -7,10 +7,8 @@ import {
   getTasks,
   createTask,
   updateTask,
-  completeTask,
   deleteTask,
   getTaskStats,
-  groupTasksByStatus,
 } from "@/lib/tasks";
 import type { OnboardingData } from "@/lib/onboarding";
 
@@ -20,7 +18,7 @@ export default function TasksPage() {
   const [profile, setProfile] = useState<OnboardingData | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filterView, setFilterView] = useState<FilterView>("all");
-  const [sortBy, setSortBy] = useState<"dueDate" | "priority" | "created">("created");
+  const [sortBy] = useState<"dueDate" | "priority" | "created">("created");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>("medium");

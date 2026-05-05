@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { OnboardingData } from "@/lib/onboarding";
 
 type AssistantStatus = "online" | "working" | "waiting" | "idle";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<OnboardingData | null>(null);
   const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>("online");
   const [activeTask, setActiveTask] = useState(
@@ -102,7 +104,7 @@ export default function DashboardPage() {
     setAssistantStatus("working");
     setActiveTask(`Opening ${taskName.toLowerCase()}...`);
 
-    window.location.href = `/chat?task=custom&name=${encodeURIComponent(taskName)}`;
+    router.push(`/chat?task=custom&name=${encodeURIComponent(taskName)}`);
   };
 
   if (!profile) {

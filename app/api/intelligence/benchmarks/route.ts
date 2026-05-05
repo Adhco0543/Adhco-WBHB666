@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
  * - Drill-down analysis for underperforming metrics
  */
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Get user's metrics
     // TODO: Aggregate peer metrics (anonymized)

@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { quoteData, action } = await request.json();
+    const { _quoteData, action } = await request.json();
 
     if (action === "oauth-callback") {
       // TODO: Handle OAuth callback from QuickBooks

@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
  * - Workflow execution logging and monitoring
  */
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Get user's workflows from Firebase
     return NextResponse.json({ workflows: [] }, { status: 501 });
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, data } = await request.json();
+    const { action, _data } = await request.json();
 
     if (action === "create") {
       // TODO: Create new workflow

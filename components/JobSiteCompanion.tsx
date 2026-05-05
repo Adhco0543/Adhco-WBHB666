@@ -37,7 +37,7 @@ export function JobSiteCompanion({
     if (!mediaRecorderRef.current) return;
 
     setIsRecording(false);
-    const { audioURL, blob } = await stopVoiceRecording(
+    const { blob } = await stopVoiceRecording(
       mediaRecorderRef.current
     );
 
@@ -230,6 +230,7 @@ export function JobSiteCompanion({
 
       {photoPreview && (
         <div className="photo-preview">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={photoPreview} alt="Job site photo" />
           <button type="button" className="clear-button" onClick={handleClearPhoto}>
             Clear Photo
