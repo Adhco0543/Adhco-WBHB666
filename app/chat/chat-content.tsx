@@ -192,16 +192,10 @@ Next questions to tighten this list:
   // ============================================================================
   // Pattern 2: Customer Info → Quote Draft
   // ============================================================================
-  const hasCustomerInfo =
-    /customer|client|name|contact|email|phone|job|project/i.test(input);
-
-  const hasProjectScope =
-    /project|job|scope|work|scope of work|estimate|price|cost/i.test(input);
-
-  // Detect quote request either by task or by keywords in input
-  const isQuoteRequest = /quote|estimate|pricing|price quote|need.*quote/i.test(input);
-
-  if ((currentTask === "quote" || isQuoteRequest) && (hasCustomerInfo || hasProjectScope || isQuoteRequest || input.length > 30)) {
+  // Much simpler: if user mentions "quote" or "estimate", generate it
+  const hasQuoteKeyword = lower.includes("quote") || lower.includes("estimate") || lower.includes("pricing");
+  
+  if (hasQuoteKeyword || (currentTask === "quote" && input.length > 10)) {
     const businessName = profile?.businessName || "Your Business";
     return {
       response: `Got it! Here's a quote draft based on what you provided:
@@ -242,13 +236,10 @@ Next Steps:
   // ============================================================================
   // Pattern 3: Email Details → Email Draft
   // ============================================================================
-  const gaveEmailDetails =
-    /email|send|message|recipient|subject|tone|hi |dear /i.test(input);
+  // Simple: if user mentions "email" or "send", generate email draft
+  const hasEmailKeyword = lower.includes("email") || lower.includes("send") || lower.includes("message");
 
-  // Detect email request either by task or by keywords in input
-  const isEmailRequest = /email|draft.*email|send.*message|write.*email/i.test(input);
-
-  if ((currentTask === "email" || memory.includes("email") || isEmailRequest) && (gaveEmailDetails || isEmailRequest)) {
+  if ((hasEmailKeyword || currentTask === "email") && input.length > 10) {
     const businessName = profile?.businessName || "Your Business";
     return {
       response: `Perfect! Here's an email draft ready to send:
@@ -277,21 +268,10 @@ Ready to send? You can copy this, make any edits, and send when ready.`
   // ============================================================================
   // Pattern 4: Due Date → Task/Reminder
   // ============================================================================
-  const gaveDueDate =
-    /due|deadline|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+\/\d+|\d+-\d+-\d+|week|month|days?/i.test(
-      input
-    );
+  // Simple: if user mentions "task", "remind", "reminder", or "schedule", create task
+  const hasTaskKeyword = lower.includes("task") || lower.includes("remind") || lower.includes("reminder") || lower.includes("schedule") || lower.includes("todo");
 
-  const wasTaskRelated =
-    memory.includes("task") ||
-    memory.includes("remind") ||
-    memory.includes("todo") ||
-    memory.includes("remember");
-
-  // Detect task request directly in input
-  const isTaskRequest = /task|remind|reminder|todo|to-do|follow.?up|schedule|create.*task/i.test(input);
-
-  if ((gaveDueDate || isTaskRequest) && (wasTaskRelated || currentTask === "task" || isTaskRequest)) {
+  if ((hasTaskKeyword || currentTask === "task") && input.length > 10) {
     const dueDate = input.match(/\d+-\d+-\d+|\d+\/\d+/)?.[0] || "To be confirmed";
     return {
       response: `Great! I've noted this task with the due date.
@@ -332,9 +312,10 @@ Next Steps:
   // ============================================================================
   // Pattern 5: Materials Task Context
   // ============================================================================
-  const isMaterialsRequest = /materials|shopping list|supplies|equipment|tools|parts|components/i.test(input);
+  // Simple: if user mentions "materials", "supplies", or "shopping", generate materials list
+  const hasMaterialsKeyword = lower.includes("materials") || lower.includes("supplies") || lower.includes("shopping") || lower.includes("equipment");
 
-  if ((currentTask === "materials" || isMaterialsRequest) && (input.length > 20 || isMaterialsRequest)) {
+  if ((hasMaterialsKeyword || currentTask === "materials") && input.length > 10) {
     return {
       response: `Great! Here's a materials list draft based on what you provided:
 
