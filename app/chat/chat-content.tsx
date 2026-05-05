@@ -390,7 +390,7 @@ export default function ChatContent() {
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true; // Keep listening across pauses
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
@@ -399,19 +399,30 @@ export default function ChatContent() {
 
     recognition.onresult = (event: any) => {
       let interimTranscript = "";
+      let finalTranscript = "";
+      
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          setInput((prev) => prev + transcript + " ");
+          finalTranscript += transcript + " ";
         } else {
           interimTranscript += transcript;
         }
+      }
+
+      // Add final transcripts to input
+      if (finalTranscript) {
+        setInput((prev) => prev + finalTranscript);
+      }
+
+      // Show interim results without committing
+      if (interimTranscript) {
+        // Optional: could show interim results in real-time
       }
     };
 
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
-      setIsListening(false);
     };
 
     recognitionRef.current = recognition;
