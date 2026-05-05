@@ -27,7 +27,18 @@ export function initializeFirebase() {
  */
 export function getDb() {
   if (!db && typeof window !== "undefined") {
-    initializeFirebase();
+    // Check if Firebase config is valid first
+    if (!firebaseConfig.projectId) {
+      console.warn("Firebase config not complete - projectId missing. Using localStorage only.");
+      return null;
+    }
+    
+    try {
+      initializeFirebase();
+    } catch (error) {
+      console.warn("Failed to initialize Firebase", error);
+      return null;
+    }
   }
   return db;
 }
@@ -59,7 +70,7 @@ export async function saveOnboardingProfile(
     localStorage.setItem("onboarding_profile", JSON.stringify(profile));
     localStorage.setItem("onboarding_profile_timestamp", new Date().toISOString());
 
-    // Try to save to Firestore
+    // Try to save to Firestore with a timeout
     try {
       const db = getDb();
       if (!db) {
@@ -70,11 +81,17 @@ export async function saveOnboardingProfile(
       const profileId = getProfileId();
       const profilesRef = collection(db, "profiles");
       
-      await setDoc(doc(profilesRef, profileId), {
-        ...profile,
-        updatedAt: serverTimestamp(),
-        savedLocally: true
-      });
+      // Use Promise.race to timeout Firestore write after 5 seconds
+      await Promise.race([
+        setDoc(doc(profilesRef, profileId), {
+          ...profile,
+          updatedAt: serverTimestamp(),
+          savedLocally: true
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Firestore save timeout")), 5000)
+        )
+      ]);
 
       console.log("Profile saved to Firestore:", profileId);
       return { success: true };
