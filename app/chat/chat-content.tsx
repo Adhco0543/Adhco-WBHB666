@@ -198,7 +198,10 @@ Next questions to tighten this list:
   const hasProjectScope =
     /project|job|scope|work|scope of work|estimate|price|cost/i.test(input);
 
-  if (currentTask === "quote" && (hasCustomerInfo || hasProjectScope || input.length > 30)) {
+  // Detect quote request either by task or by keywords in input
+  const isQuoteRequest = /quote|estimate|pricing|price quote|need.*quote/i.test(input);
+
+  if ((currentTask === "quote" || isQuoteRequest) && (hasCustomerInfo || hasProjectScope || isQuoteRequest || input.length > 30)) {
     const businessName = profile?.businessName || "Your Business";
     return {
       response: `Got it! Here's a quote draft based on what you provided:
@@ -242,7 +245,10 @@ Next Steps:
   const gaveEmailDetails =
     /email|send|message|recipient|subject|tone|hi |dear /i.test(input);
 
-  if ((currentTask === "email" || memory.includes("email")) && gaveEmailDetails) {
+  // Detect email request either by task or by keywords in input
+  const isEmailRequest = /email|draft.*email|send.*message|write.*email/i.test(input);
+
+  if ((currentTask === "email" || memory.includes("email") || isEmailRequest) && (gaveEmailDetails || isEmailRequest)) {
     const businessName = profile?.businessName || "Your Business";
     return {
       response: `Perfect! Here's an email draft ready to send:
@@ -282,7 +288,10 @@ Ready to send? You can copy this, make any edits, and send when ready.`
     memory.includes("todo") ||
     memory.includes("remember");
 
-  if (gaveDueDate && (wasTaskRelated || currentTask === "task")) {
+  // Detect task request directly in input
+  const isTaskRequest = /task|remind|reminder|todo|to-do|follow.?up|schedule|create.*task/i.test(input);
+
+  if ((gaveDueDate || isTaskRequest) && (wasTaskRelated || currentTask === "task" || isTaskRequest)) {
     const dueDate = input.match(/\d+-\d+-\d+|\d+\/\d+/)?.[0] || "To be confirmed";
     return {
       response: `Great! I've noted this task with the due date.
@@ -323,7 +332,9 @@ Next Steps:
   // ============================================================================
   // Pattern 5: Materials Task Context
   // ============================================================================
-  if (currentTask === "materials" && input.length > 20) {
+  const isMaterialsRequest = /materials|shopping list|supplies|equipment|tools|parts|components/i.test(input);
+
+  if ((currentTask === "materials" || isMaterialsRequest) && (input.length > 20 || isMaterialsRequest)) {
     return {
       response: `Great! Here's a materials list draft based on what you provided:
 
