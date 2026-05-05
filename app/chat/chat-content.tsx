@@ -193,14 +193,12 @@ Next questions to tighten this list:
   // Pattern 2: Customer Info → Quote Draft
   // ============================================================================
   const hasCustomerInfo =
-    /customer|client|name|contact|email|phone/i.test(input) &&
-    memory.includes("quote");
+    /customer|client|name|contact|email|phone|job|project/i.test(input);
 
   const hasProjectScope =
-    /project|job|scope|work|scope of work/i.test(input) &&
-    (memory.includes("quote") || memory.includes("estimate"));
+    /project|job|scope|work|scope of work|estimate|price|cost/i.test(input);
 
-  if ((hasCustomerInfo || hasProjectScope) && memory.includes("quote")) {
+  if (currentTask === "quote" && (hasCustomerInfo || hasProjectScope || input.length > 30)) {
     const businessName = profile?.businessName || "Your Business";
     return {
       response: `Got it! Here's a quote draft based on what you provided:
@@ -208,7 +206,7 @@ Next questions to tighten this list:
 QUOTE DRAFT
 
 Business: ${businessName}
-Prepared for: [Customer from: ${input.substring(0, 50)}...]
+Prepared for: [Customer name]
 Project: [From your input]
 Location: [Job location]
 
@@ -242,10 +240,9 @@ Next Steps:
   // Pattern 3: Email Details → Email Draft
   // ============================================================================
   const gaveEmailDetails =
-    /email|send|message|recipient|subject|tone/i.test(input) &&
-    memory.includes("email");
+    /email|send|message|recipient|subject|tone|hi |dear /i.test(input);
 
-  if (gaveEmailDetails && memory.includes("email")) {
+  if ((currentTask === "email" || memory.includes("email")) && gaveEmailDetails) {
     const businessName = profile?.businessName || "Your Business";
     return {
       response: `Perfect! Here's an email draft ready to send:
@@ -320,6 +317,35 @@ Next Steps:
         type: "task_reminder",
         createdAt: new Date().toISOString()
       }
+    };
+  }
+
+  // ============================================================================
+  // Pattern 5: Materials Task Context
+  // ============================================================================
+  if (currentTask === "materials" && input.length > 20) {
+    return {
+      response: `Great! Here's a materials list draft based on what you provided:
+
+MATERIALS LIST DRAFT
+
+Project: [From your input]
+
+Materials:
+${input}
+
+Supplier Recommendations:
+[Based on your project type]
+
+Estimated Total Cost: $[Amount]
+Delivery Time: [Typical timeframe]
+
+Next Steps:
+1. Get quotes from suppliers
+2. Confirm delivery dates
+3. Order when ready
+
+Need quantities or specific measurements? Just provide those details and I'll refine this list.`
     };
   }
 
