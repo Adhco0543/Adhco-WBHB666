@@ -156,6 +156,52 @@ Next Steps:
 3. Track progress`;
 }
 
+function generateReply(input: string, history: Message[], profile: OnboardingData | null): string | null {
+  const lower = input.toLowerCase();
+  const memory = history.map((m) => m.content.toLowerCase()).join(" ");
+
+  // Check for dimensions follow-up logic to avoid repeating materials lists
+  const gaveDimensions =
+    /\d+\s?(ft|feet|in|inch|inches|'|")/i.test(input) ||
+    /\d+\s?x\s?\d+/i.test(input) ||
+    lower.includes("wide") ||
+    lower.includes("long") ||
+    lower.includes("tall") ||
+    lower.includes("dimensions");
+
+  const wasBuildingMaterials =
+    memory.includes("materials list") ||
+    memory.includes("measurements") ||
+    memory.includes("shopping-ready list") ||
+    memory.includes("project details");
+
+  if (wasBuildingMaterials && gaveDimensions) {
+    return `Perfect — now I can turn that into a usable next step.
+
+SHOPPING LIST DRAFT
+
+Based on your dimensions:
+${input}
+
+Materials to check:
+- Primary material sized to fit the project
+- Framing or support material if needed
+- Fasteners: screws, nails, brackets, anchors
+- Finish materials: paint, stain, sealant, trim, or edge pieces
+- Safety supplies: gloves, glasses, masks if cutting or sanding
+- Cleanup supplies: bags, shop towels, scraper, broom
+
+Next questions to tighten this list:
+1. What exactly are we building or repairing?
+2. Is it indoor or outdoor?
+3. What material do you prefer?
+4. Do you want this priced as budget, standard, or premium?`;
+  }
+
+  // If no local logic matches, return null to fallback to API
+  return null;
+}
+
 export default function ChatContent() {
   const searchParams = useSearchParams();
   const task = searchParams.get("task") || "chat";
@@ -208,6 +254,34 @@ export default function ChatContent() {
     setIsLoading(true);
 
     try {
+      // Try local generateReply first
+      const localResponse = generateReply(userText, messages, profile);
+      
+      if (localResponse) {
+        // Use local response
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: localResponse
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        // Save output if it's a draft
+        if (localResponse.includes("SHOPPING LIST DRAFT")) {
+          saveOutput({
+            id: crypto.randomUUID(),
+            type: "materials",
+            title: "Shopping List Draft",
+            content: localResponse,
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        setIsLoading(false);
+        return;
+      }
+
+      // Fallback to API if local logic doesn't match
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
