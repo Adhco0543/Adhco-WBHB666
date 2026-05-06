@@ -153,6 +153,10 @@ export function getTasks(): Task[] {
   }
 }
 
+export function getTask(id: string): Task | undefined {
+  return getTasks().find(t => t.id === id);
+}
+
 export function getPendingTasks(): Task[] {
   return getTasks()
     .filter(t => t.status !== "completed")

@@ -148,10 +148,6 @@ export function updateTaskStatus(
   }
 }
 
-export function updateTaskPriority(id: string, priority: TaskPriority): void {
-  storage.updateTask(id, { priority });
-}
-
 export function deleteTask(id: string): void {
   storage.deleteTask(id);
 }
@@ -300,6 +296,151 @@ export function getOverdueTasks(): Task[] {
     if (!t.dueDate || t.status === "completed") return false;
     return new Date(t.dueDate) < now;
   });
+}
+
+// ============================================================================
+// Dashboard Control Center Actions
+// ============================================================================
+export function getStats() {
+  const outputs = storage.getOutputs();
+  const tasks = storage.getTasks();
+  const completedTasks = tasks.filter((t) => t.status === "completed").length;
+  const pendingTasks = tasks.filter((t) => t.status === "pending").length;
+  const quotes = outputs.filter((o) => o.type === "quote");
+  const materials = outputs.filter((o) => o.type === "materials");
+  const emails = outputs.filter((o) => o.type === "email");
+
+  // Rough revenue estimate: assume ~$500 per quote (adjust as needed)
+  const estimatedRevenue = quotes.length * 500;
+
+  return {
+    totalQuotes: quotes.length,
+    totalMaterials: materials.length,
+    totalEmails: emails.length,
+    totalTasks: tasks.length,
+    completedTasks,
+    pendingTasks,
+    completionRate: tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0,
+    estimatedRevenue,
+  };
+}
+
+export function getFollowUpSuggestions() {
+  const outputs = storage.getOutputs();
+  const tasks = storage.getTasks();
+
+  const suggestions = [];
+
+  // Quotes older than 7 days without follow-up
+  const oldQuotes = outputs.filter((o) => {
+    if (o.type !== "quote" || o.status === "sent") return false;
+    const daysOld = (Date.now() - new Date(o.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    return daysOld > 7;
+  });
+
+  if (oldQuotes.length > 0) {
+    suggestions.push({
+      id: "follow-up-quotes",
+      type: "follow-up" as const,
+      title: `${oldQuotes.length} Quote${oldQuotes.length > 1 ? "s" : ""} Need Follow-up`,
+      description: `You have ${oldQuotes.length} quote${oldQuotes.length > 1 ? "s" : ""} older than 7 days. Consider reaching out to customers.`,
+      action: "/dashboard#recent-work",
+      priority: "high" as const,
+    });
+  }
+
+  // Overdue tasks
+  const overdueTasks = getOverdueTasks();
+  if (overdueTasks.length > 0) {
+    suggestions.push({
+      id: "overdue-tasks",
+      type: "warning" as const,
+      title: `${overdueTasks.length} Overdue Task${overdueTasks.length > 1 ? "s" : ""}`,
+      description: `You have ${overdueTasks.length} task${overdueTasks.length > 1 ? "s" : ""} past their due date.`,
+      action: "/dashboard#pending-tasks",
+      priority: "high" as const,
+    });
+  }
+
+  // Tasks needing completion
+  const activeTasks = tasks.filter((t) => t.status === "in-progress");
+  if (activeTasks.length > 3) {
+    suggestions.push({
+      id: "active-tasks-high",
+      type: "suggestion" as const,
+      title: `${activeTasks.length} Tasks In Progress`,
+      description: "Consider focusing on completing these before starting new ones.",
+      action: "/dashboard#pending-tasks",
+      priority: "medium" as const,
+    });
+  }
+
+  return suggestions;
+}
+
+export function markTaskComplete(id: string): void {
+  const task = storage.getTask(id);
+  if (!task) return;
+
+  storage.updateTask(id, { status: "completed" });
+
+  addActivityFeedItem({
+    type: "task_completed",
+    title: `Task Completed: ${task.title}`,
+    description: task.description,
+    linkedTaskId: id,
+  });
+}
+
+export function updateTaskPriority(id: string, priority: TaskPriority): void {
+  const task = storage.getTask(id);
+  if (!task) return;
+
+  storage.updateTask(id, { priority });
+
+  addActivityFeedItem({
+    type: "chat",
+    title: `Task Priority Changed: ${task.title}`,
+    description: `Priority changed to ${priority}`,
+    linkedTaskId: id,
+  });
+}
+
+export function getSmartSuggestions() {
+  return [
+    {
+      id: "new-quote",
+      icon: "💰",
+      title: "Build a New Quote",
+      description: "Create a quote for a customer",
+      action: "/chat?task=quote",
+      actionLabel: "Start Quote",
+    },
+    {
+      id: "new-materials",
+      icon: "📦",
+      title: "Create Materials List",
+      description: "Generate a materials list for a project",
+      action: "/chat?task=materials",
+      actionLabel: "Create List",
+    },
+    {
+      id: "new-task",
+      icon: "✓",
+      title: "Add a Task",
+      description: "Create a new task or reminder",
+      action: "/chat?task=task",
+      actionLabel: "Add Task",
+    },
+    {
+      id: "new-email",
+      icon: "📧",
+      title: "Draft an Email",
+      description: "Write an email to a customer",
+      action: "/chat?task=email",
+      actionLabel: "Draft Email",
+    },
+  ];
 }
 
 // ============================================================================

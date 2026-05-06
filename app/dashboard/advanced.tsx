@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { OnboardingData } from "@/lib/onboarding";
 import { generateSmartSuggestions, generateDailyBrief, type DashboardSuggestion, type DailyBrief } from "@/lib/dashboardSuggestions";
 import { loadOnboardingProfile, initFirebaseOnStartup } from "@/lib/firebase";
-import { getDashboardSummary } from "@/lib/assistantActions";
+import { getDashboardSummary, getStats, getFollowUpSuggestions, getSmartSuggestions, markTaskComplete, updateTaskPriority } from "@/lib/assistantActions";
 import type { SavedOutput, Task, ActivityFeedItem } from "@/lib/assistantTypes";
 
 export default function AdvancedDashboardPage() {
@@ -19,6 +19,9 @@ export default function AdvancedDashboardPage() {
   const [recentOutputs, setRecentOutputs] = useState<SavedOutput[]>([]);
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
   const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<any[]>([]);
+  const [quickActions, setQuickActions] = useState<any[]>([]);
 
   useEffect(() => {
     // Initialize Firebase on startup
@@ -51,6 +54,11 @@ export default function AdvancedDashboardPage() {
         setRecentOutputs(summary.recentOutputs);
         setPendingTasks(summary.pendingTasks);
         setActivityFeed(summary.activityFeed);
+
+        // Load control center data
+        setStats(getStats());
+        setFollowUpSuggestions(getFollowUpSuggestions());
+        setQuickActions(getSmartSuggestions());
       })
       .catch((error) => {
         const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
@@ -201,6 +209,125 @@ export default function AdvancedDashboardPage() {
           </div>
         </section>
 
+        {/* Control Panel - Quick Actions */}
+        <section className="card">
+          <p className="eyebrow">🎮 CONTROL PANEL</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
+            {quickActions.map((action) => (
+              <Link
+                key={action.id}
+                href={action.action}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "1.5rem 1rem",
+                  background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                  border: "2px solid #0284c7",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 8px 16px rgba(2, 132, 199, 0.2)";
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <span style={{ fontSize: "2rem" }}>{action.icon}</span>
+                <span style={{ fontWeight: "600", fontSize: "0.9rem", textAlign: "center", color: "#0c4a6e" }}>
+                  {action.title}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Stats Cards - Analytics */}
+        {stats && (
+          <section className="card">
+            <p className="eyebrow">📊 YOUR STATS</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
+              <div style={{ background: "#eff6ff", padding: "1rem", borderRadius: "8px", border: "1px solid #bfdbfe" }}>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "#1e40af", fontWeight: "600" }}>Total Quotes</p>
+                <p style={{ margin: "0.5rem 0 0 0", fontSize: "1.75rem", fontWeight: "700", color: "#0c4a6e" }}>
+                  {stats.totalQuotes}
+                </p>
+              </div>
+              <div style={{ background: "#fef3c7", padding: "1rem", borderRadius: "8px", border: "1px solid #fcd34d" }}>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "#92400e", fontWeight: "600" }}>Pending Tasks</p>
+                <p style={{ margin: "0.5rem 0 0 0", fontSize: "1.75rem", fontWeight: "700", color: "#78350f" }}>
+                  {stats.pendingTasks}
+                </p>
+              </div>
+              <div style={{ background: "#d1fae5", padding: "1rem", borderRadius: "8px", border: "1px solid #a7f3d0" }}>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "#065f46", fontWeight: "600" }}>Completed</p>
+                <p style={{ margin: "0.5rem 0 0 0", fontSize: "1.75rem", fontWeight: "700", color: "#064e3b" }}>
+                  {stats.completedTasks}/{stats.totalTasks}
+                </p>
+              </div>
+              <div style={{ background: "#fce7f3", padding: "1rem", borderRadius: "8px", border: "1px solid #fbcfe8" }}>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "#9d174d", fontWeight: "600" }}>Est. Revenue</p>
+                <p style={{ margin: "0.5rem 0 0 0", fontSize: "1.75rem", fontWeight: "700", color: "#831843" }}>
+                  ${(stats.estimatedRevenue / 1000).toFixed(1)}k
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Automation Suggestions - Follow-ups & Warnings */}
+        {followUpSuggestions.length > 0 && (
+          <section className="card">
+            <p className="eyebrow" style={{ color: "#dc2626" }}>⚠️ AUTOMATION SUGGESTIONS</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
+              {followUpSuggestions.map((suggestion) => (
+                <div
+                  key={suggestion.id}
+                  style={{
+                    padding: "1rem",
+                    background: suggestion.priority === "high" ? "#fee2e2" : "#fef3c7",
+                    border: `2px solid ${suggestion.priority === "high" ? "#fca5a5" : "#fcd34d"}`,
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "1rem" }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: "600", color: suggestion.priority === "high" ? "#991b1b" : "#92400e" }}>
+                        {suggestion.title}
+                      </p>
+                      <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem", color: suggestion.priority === "high" ? "#7f1d1d" : "#78350f" }}>
+                        {suggestion.description}
+                      </p>
+                    </div>
+                    <Link
+                      href={suggestion.action}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        background: suggestion.priority === "high" ? "#dc2626" : "#f59e0b",
+                        color: "white",
+                        borderRadius: "6px",
+                        textDecoration: "none",
+                        fontWeight: "500",
+                        fontSize: "0.85rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Take Action
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* High Priority Suggestions */}
         {highPrioritySuggestions.length > 0 && (
           <section className="card">
@@ -325,7 +452,7 @@ export default function AdvancedDashboardPage() {
                     borderRadius: "8px"
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "1rem", marginBottom: "0.75rem" }}>
                     <div style={{ flex: 1 }}>
                       <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "0.95rem", fontWeight: "600" }}>
                         {task.title}
@@ -347,6 +474,49 @@ export default function AdvancedDashboardPage() {
                     }}>
                       {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                     </span>
+                  </div>
+                  {/* Task Controls */}
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => {
+                        markTaskComplete(task.id);
+                        setStats(getStats());
+                        setPendingTasks(getDashboardSummary().pendingTasks);
+                      }}
+                      style={{
+                        padding: "0.4rem 0.8rem",
+                        background: "#10b981",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "0.8rem",
+                        fontWeight: "500",
+                      }}
+                      title="Mark as complete"
+                    >
+                      ✓ Complete
+                    </button>
+                    <select
+                      onChange={(e) => {
+                        updateTaskPriority(task.id, e.target.value as any);
+                        setStats(getStats());
+                        setPendingTasks(getDashboardSummary().pendingTasks);
+                      }}
+                      defaultValue={task.priority}
+                      style={{
+                        padding: "0.4rem 0.6rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "4px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        background: "white",
+                      }}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
                   </div>
                 </div>
               ))}
