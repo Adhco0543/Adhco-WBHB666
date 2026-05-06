@@ -52,6 +52,7 @@ export interface SavedOutput {
   title: string;
   content: string;
   status?: OutputStatus;
+  notes?: string;
   createdAt: string;
   updatedAt?: string;
   linkedTaskId?: string;

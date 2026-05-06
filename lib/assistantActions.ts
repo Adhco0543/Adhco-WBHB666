@@ -581,3 +581,311 @@ export function logAction(
     description: details ? JSON.stringify(details) : undefined,
   });
 }
+
+// ============================================================================
+// Output Action Handlers (Copy, Download, Email, Share, Print, etc.)
+// ============================================================================
+
+export async function handleCopyAction(id: string): Promise<boolean> {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  try {
+    await navigator.clipboard.writeText(output.content);
+    addActivityFeedItem({
+      type: "draft_created",
+      title: "Content Copied",
+      description: `${output.type}: ${output.title}`,
+      linkedOutputId: id,
+    });
+    return true;
+  } catch (err) {
+    console.error("Copy failed:", err);
+    return false;
+  }
+}
+
+export function handleDownloadAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  try {
+    const element = document.createElement("a");
+    const filename = `${output.title.replace(/\s+/g, "-").toLowerCase()}.txt`;
+    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(output.content));
+    element.setAttribute("download", filename);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+
+    addActivityFeedItem({
+      type: "draft_created",
+      title: "Downloaded",
+      description: `${output.type}: ${output.title}`,
+      linkedOutputId: id,
+    });
+    return true;
+  } catch (err) {
+    console.error("Download failed:", err);
+    return false;
+  }
+}
+
+export function handleEmailAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  try {
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(output.title)}&body=${encodeURIComponent(output.content)}`;
+    window.location.href = mailtoLink;
+
+    addActivityFeedItem({
+      type: "email_sent",
+      title: "Opened Email Client",
+      description: `${output.type}: ${output.title}`,
+      linkedOutputId: id,
+    });
+    return true;
+  } catch (err) {
+    console.error("Email action failed:", err);
+    return false;
+  }
+}
+
+export function handleSendAction(id: string, recipient?: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  // Mark as sent
+  updateOutputStatus(id, "sent");
+
+  addActivityFeedItem({
+    type: output.type === "email" ? "email_sent" : "quote_sent",
+    title: `${output.type.charAt(0).toUpperCase() + output.type.slice(1)} Sent`,
+    description: recipient ? `to ${recipient}` : output.title,
+    linkedOutputId: id,
+  });
+  return true;
+}
+
+export function handleShareAction(id: string, platform: "clipboard" | "email" | "web" = "web"): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  try {
+    if (platform === "clipboard") {
+      navigator.clipboard.writeText(output.content);
+    } else if (platform === "email") {
+      const mailtoLink = `mailto:?subject=${encodeURIComponent(output.title)}&body=${encodeURIComponent(output.content)}`;
+      window.location.href = mailtoLink;
+    } else if (platform === "web" && navigator.share) {
+      navigator.share({
+        title: output.title,
+        text: output.content.substring(0, 100),
+      });
+    }
+
+    addActivityFeedItem({
+      type: "draft_created",
+      title: "Shared",
+      description: `${output.type}: ${output.title} (${platform})`,
+      linkedOutputId: id,
+    });
+    return true;
+  } catch (err) {
+    console.error("Share failed:", err);
+    return false;
+  }
+}
+
+export function handlePrintAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  try {
+    const printWindow = window.open("", "", "height=600,width=800");
+    if (!printWindow) return false;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${output.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            .content { white-space: pre-wrap; word-wrap: break-word; }
+            .meta { color: #999; font-size: 0.9em; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>${output.title}</h1>
+          <div class="content">${output.content}</div>
+          <div class="meta">Created: ${new Date(output.createdAt).toLocaleString()}</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+
+    addActivityFeedItem({
+      type: "draft_created",
+      title: "Printed",
+      description: `${output.type}: ${output.title}`,
+      linkedOutputId: id,
+    });
+    return true;
+  } catch (err) {
+    console.error("Print failed:", err);
+    return false;
+  }
+}
+
+export function handleDuplicateAction(id: string): SavedOutput | null {
+  const output = getOutput(id);
+  if (!output) return null;
+
+  const duplicate = createOutput(
+    output.type,
+    `${output.title} (Copy)`,
+    output.content,
+    output.metadata
+  );
+
+  addActivityFeedItem({
+    type: "draft_created",
+    title: "Duplicated",
+    description: `${output.type}: ${output.title}`,
+    linkedOutputId: id,
+  });
+
+  return duplicate;
+}
+
+export function handleExportPdfAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  try {
+    // Basic PDF export - creates a data URL with HTML that can be printed to PDF
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${output.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1 { color: #333; border-bottom: 3px solid #2563eb; padding-bottom: 10px; }
+            .content { margin: 20px 0; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+            .meta { color: #666; font-size: 0.9em; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>${output.title}</h1>
+          <div class="content">${output.content}</div>
+          <div class="meta">
+            <p><strong>Type:</strong> ${output.type}</p>
+            <p><strong>Created:</strong> ${new Date(output.createdAt).toLocaleString()}</p>
+            <p><strong>Status:</strong> ${output.status}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const dataUrl = "data:text/html;charset=utf-8," + encodeURIComponent(html);
+    const printWindow = window.open(dataUrl);
+    if (printWindow) {
+      setTimeout(() => printWindow.print(), 500);
+    }
+
+    addActivityFeedItem({
+      type: "draft_created",
+      title: "Exported to PDF",
+      description: `${output.type}: ${output.title}`,
+      linkedOutputId: id,
+    });
+    return true;
+  } catch (err) {
+    console.error("PDF export failed:", err);
+    return false;
+  }
+}
+
+export function handleDeleteAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  removeOutput(id);
+  return true;
+}
+
+export function handleCompleteAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  updateOutputStatus(id, "completed");
+
+  addActivityFeedItem({
+    type: "task_completed",
+    title: `${output.type.charAt(0).toUpperCase() + output.type.slice(1)} Completed`,
+    description: output.title,
+    linkedOutputId: id,
+  });
+  return true;
+}
+
+export function handleMarkSentAction(id: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  updateOutputStatus(id, "sent");
+
+  addActivityFeedItem({
+    type: output.type === "email" ? "email_sent" : "quote_sent",
+    title: `Marked as Sent`,
+    description: `${output.type}: ${output.title}`,
+    linkedOutputId: id,
+  });
+  return true;
+}
+
+export function handleEditStatusAction(id: string, newStatus: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  updateOutputStatus(id, newStatus as any);
+
+  addActivityFeedItem({
+    type: "draft_created",
+    title: "Status Updated",
+    description: `${output.type}: ${output.title} → ${newStatus}`,
+    linkedOutputId: id,
+  });
+  return true;
+}
+
+export function handleAddNotesAction(id: string, notes: string): boolean {
+  const output = getOutput(id);
+  if (!output) return false;
+
+  editOutput(id, {
+    ...output,
+    notes: (output.notes || "") + "\n\n[" + new Date().toLocaleString() + "] " + notes,
+  } as any);
+
+  addActivityFeedItem({
+    type: "draft_created",
+    title: "Notes Added",
+    description: `${output.type}: ${output.title}`,
+    linkedOutputId: id,
+  });
+  return true;
+}
+
+// Helper function to update output status
+export function updateOutputStatus(id: string, status: string): void {
+  storage.updateOutput(id, {
+    status: status as any,
+    updatedAt: new Date().toISOString(),
+  });
+}
