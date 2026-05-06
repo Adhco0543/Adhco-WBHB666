@@ -12,6 +12,12 @@ import {
   TaskStatus,
   TaskPriority,
   TaskType,
+  OutputType,
+  OutputAction,
+  UserPreferences,
+  CustomTemplate,
+  CustomWorkflow,
+  ActionVisibility,
 } from "./assistantTypes";
 import * as storage from "./assistantStorage";
 
@@ -441,6 +447,95 @@ export function getSmartSuggestions() {
       actionLabel: "Draft Email",
     },
   ];
+}
+
+// ============================================================================
+// Customization & Preferences Actions
+// ============================================================================
+export function getVisibleActions(outputType: SavedOutput["type"]) {
+  const visibility = storage.getActionVisibility();
+  return visibility[outputType] || [];
+}
+
+export function updateVisibleActions(
+  outputType: SavedOutput["type"],
+  actions: OutputAction[]
+): void {
+  const visibility = storage.getActionVisibility();
+  visibility[outputType] = actions;
+  storage.updateActionVisibility(visibility);
+}
+
+export function createTemplate(
+  name: string,
+  type: SavedOutput["type"],
+  content: string,
+  description?: string,
+  isDefault: boolean = false
+): CustomTemplate {
+  const template: CustomTemplate = {
+    id: generateId(),
+    name,
+    type,
+    templateContent: content,
+    description,
+    isDefault,
+    createdAt: new Date().toISOString(),
+  };
+  storage.saveTemplate(template);
+  return template;
+}
+
+export function getTemplatesForType(type: SavedOutput["type"]): CustomTemplate[] {
+  return storage.getTemplates().filter(t => t.type === type);
+}
+
+export function deleteTemplate(id: string): void {
+  storage.deleteTemplate(id);
+}
+
+export function createWorkflow(
+  type: SavedOutput["type"],
+  statuses: string[],
+  defaultStatus: string
+): CustomWorkflow {
+  const workflow: CustomWorkflow = {
+    id: generateId(),
+    type,
+    statuses,
+    defaultStatus,
+    createdAt: new Date().toISOString(),
+  };
+  storage.saveWorkflow(workflow);
+  return workflow;
+}
+
+export function getWorkflowForType(type: OutputType): CustomWorkflow | null {
+  const workflow = storage.getWorkflowByType(type);
+  return workflow || null;
+}
+
+export function getAvailableStatuses(type: OutputType): string[] {
+  const workflow = getWorkflowForType(type);
+  if (workflow) return workflow.statuses;
+  
+  // Default statuses
+  const defaults: Record<OutputType, string[]> = {
+    quote: ["draft", "sent", "approved", "invoiced"],
+    materials: ["draft", "sent", "ordered", "received"],
+    email: ["draft", "sent", "delivered"],
+    task: ["pending", "in-progress", "completed"],
+    note: ["draft", "archived"],
+  };
+  return defaults[type] || ["draft", "completed"];
+}
+
+export function getPreferencesForUI() {
+  return storage.getPreferences();
+}
+
+export function updatePreferences(updates: Partial<UserPreferences>): void {
+  storage.updatePreferences(updates);
 }
 
 // ============================================================================

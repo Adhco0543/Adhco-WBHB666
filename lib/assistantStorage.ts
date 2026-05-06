@@ -300,3 +300,134 @@ export function getStorageStats(): {
       estimateSize(activity),
   };
 }
+
+// ============================================================================
+// Customization Storage
+// ============================================================================
+import type { OutputCustomization, ActionVisibility, UserPreferences, CustomTemplate, CustomWorkflow, OutputAction } from "./assistantTypes";
+
+const DEFAULT_ACTION_VISIBILITY: ActionVisibility = {
+  quote: ["copy", "download", "email", "send", "print", "share", "duplicate", "delete"],
+  materials: ["copy", "download", "print", "share", "duplicate", "delete"],
+  email: ["copy", "send", "edit_status", "delete"],
+  task: ["complete", "edit_status", "delete"],
+  note: ["copy", "download", "delete"],
+};
+
+const DEFAULT_PREFERENCES: UserPreferences = {
+  theme: "auto",
+  fontSize: "medium",
+  compactMode: false,
+  showMetadata: true,
+  defaultSort: "newest",
+};
+
+export function getCustomization(): OutputCustomization {
+  try {
+    const stored = localStorage.getItem("output_customization");
+    if (stored) return JSON.parse(stored);
+    
+    return {
+      actionVisibility: DEFAULT_ACTION_VISIBILITY,
+      preferences: DEFAULT_PREFERENCES,
+      templates: [],
+      workflows: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("Error reading customization:", error);
+    return {
+      actionVisibility: DEFAULT_ACTION_VISIBILITY,
+      preferences: DEFAULT_PREFERENCES,
+      templates: [],
+      workflows: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+}
+
+export function saveCustomization(customization: OutputCustomization): void {
+  try {
+    localStorage.setItem("output_customization", JSON.stringify(customization));
+  } catch (error) {
+    console.error("Error saving customization:", error);
+  }
+}
+
+export function getActionVisibility(): ActionVisibility {
+  return getCustomization().actionVisibility;
+}
+
+export function updateActionVisibility(updates: Partial<ActionVisibility>): void {
+  const customization = getCustomization();
+  customization.actionVisibility = { ...customization.actionVisibility, ...updates };
+  customization.updatedAt = new Date().toISOString();
+  saveCustomization(customization);
+}
+
+export function getPreferences(): UserPreferences {
+  return getCustomization().preferences;
+}
+
+export function updatePreferences(updates: Partial<UserPreferences>): void {
+  const customization = getCustomization();
+  customization.preferences = { ...customization.preferences, ...updates };
+  customization.updatedAt = new Date().toISOString();
+  saveCustomization(customization);
+}
+
+export function getTemplates(): CustomTemplate[] {
+  return getCustomization().templates;
+}
+
+export function getTemplateById(id: string): CustomTemplate | undefined {
+  return getTemplates().find(t => t.id === id);
+}
+
+export function saveTemplate(template: CustomTemplate): void {
+  const customization = getCustomization();
+  const index = customization.templates.findIndex(t => t.id === template.id);
+  if (index >= 0) {
+    customization.templates[index] = template;
+  } else {
+    customization.templates.push(template);
+  }
+  customization.updatedAt = new Date().toISOString();
+  saveCustomization(customization);
+}
+
+export function deleteTemplate(id: string): void {
+  const customization = getCustomization();
+  customization.templates = customization.templates.filter(t => t.id !== id);
+  customization.updatedAt = new Date().toISOString();
+  saveCustomization(customization);
+}
+
+export function getWorkflows(): CustomWorkflow[] {
+  return getCustomization().workflows;
+}
+
+export function getWorkflowByType(type: string): CustomWorkflow | undefined {
+  return getWorkflows().find(w => w.type === type);
+}
+
+export function saveWorkflow(workflow: CustomWorkflow): void {
+  const customization = getCustomization();
+  const index = customization.workflows.findIndex(w => w.id === workflow.id);
+  if (index >= 0) {
+    customization.workflows[index] = workflow;
+  } else {
+    customization.workflows.push(workflow);
+  }
+  customization.updatedAt = new Date().toISOString();
+  saveCustomization(customization);
+}
+
+export function deleteWorkflow(id: string): void {
+  const customization = getCustomization();
+  customization.workflows = customization.workflows.filter(w => w.id !== id);
+  customization.updatedAt = new Date().toISOString();
+  saveCustomization(customization);
+}

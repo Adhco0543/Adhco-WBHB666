@@ -156,3 +156,74 @@ export interface DashboardSummary {
     openTasks: number;
   };
 }
+
+// ============================================================================
+// Customization & Preferences
+// ============================================================================
+
+// Available actions for each output type
+export type OutputAction = 
+  | "copy" 
+  | "download" 
+  | "email" 
+  | "send"
+  | "print"
+  | "share"
+  | "duplicate"
+  | "export_pdf"
+  | "delete"
+  | "complete"
+  | "mark_sent"
+  | "edit_status"
+  | "add_notes";
+
+// Which actions to show for each output type
+export interface ActionVisibility {
+  quote: OutputAction[];
+  materials: OutputAction[];
+  email: OutputAction[];
+  task: OutputAction[];
+  note: OutputAction[];
+}
+
+// User display preferences
+export interface UserPreferences {
+  theme: "light" | "dark" | "auto";
+  fontSize: "small" | "medium" | "large";
+  compactMode: boolean;
+  showMetadata: boolean; // Show created date, status, etc.
+  showLineNumbers?: boolean; // For code/detailed content
+  defaultSort: "newest" | "oldest" | "title";
+}
+
+// Custom template for generating outputs
+export interface CustomTemplate {
+  id: string;
+  name: string; // "Residential Quote", "Emergency Task", etc.
+  type: OutputType;
+  templateContent: string; // Template with {{placeholders}}
+  description?: string;
+  isDefault?: boolean;
+  createdAt: string;
+}
+
+// Custom workflow/status for each type
+export interface CustomWorkflow {
+  id: string;
+  type: OutputType;
+  statuses: string[]; // e.g., ["Draft", "Sent", "Approved", "Invoiced"]
+  defaultStatus: string;
+  createdAt: string;
+}
+
+// Master customization settings
+export interface OutputCustomization {
+  userId?: string;
+  actionVisibility: ActionVisibility;
+  preferences: UserPreferences;
+  templates: CustomTemplate[];
+  workflows: CustomWorkflow[];
+  defaultTemplate?: Record<OutputType, string>; // templateId for each type
+  createdAt: string;
+  updatedAt: string;
+}

@@ -144,8 +144,17 @@ export default function AdvancedDashboardPage() {
             ← Home
           </Link>
           <div style={{ display: "flex", gap: "0.75rem" }}>
+            <Link className="button" href="/quotes">
+              💰 Quotes
+            </Link>
+            <Link className="button" href="/materials">
+              📦 Materials
+            </Link>
             <Link className="button" href="/tasks">
               📋 Tasks
+            </Link>
+            <Link className="button ghost" href="/settings">
+              ⚙️ Settings
             </Link>
             <Link className="button ghost" href="/integrations">
               🔗 Integrations
