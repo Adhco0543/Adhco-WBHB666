@@ -159,6 +159,9 @@ export default function AdvancedDashboardPage() {
             <Link className="button ghost" href="/assistant-settings">
               🤖 AI Settings
             </Link>
+            <Link className="button ghost" href="/tools">
+              🔧 Tools
+            </Link>
             <Link className="button ghost" href="/settings">
               ⚙️ Settings
             </Link>
