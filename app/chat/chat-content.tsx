@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { OnboardingData } from "@/lib/onboarding";
-import { saveOutput, saveTask, type SavedOutput, type Task } from "@/lib/assistantMemory";
+import { createOutput, createTask } from "@/lib/assistantActions";
+import type { Task } from "@/lib/assistantTypes";
 
 type Message = {
   role: "assistant" | "user";
@@ -476,42 +477,24 @@ export default function ChatContent() {
 
         // Save output if it's a draft
         if (localResult.response.includes("SHOPPING LIST DRAFT")) {
-          saveOutput({
-            id: crypto.randomUUID(),
-            type: "materials",
-            title: "Shopping List Draft",
-            content: localResult.response,
-            createdAt: new Date().toISOString()
-          });
+          createOutput("materials", "Shopping List Draft", localResult.response);
         } else if (localResult.response.includes("QUOTE DRAFT")) {
-          saveOutput({
-            id: crypto.randomUUID(),
-            type: "quote",
-            title: "Quote Draft",
-            content: localResult.response,
-            createdAt: new Date().toISOString()
-          });
+          createOutput("quote", "Quote Draft", localResult.response);
         } else if (localResult.response.includes("EMAIL DRAFT")) {
-          saveOutput({
-            id: crypto.randomUUID(),
-            type: "email",
-            title: "Email Draft",
-            content: localResult.response,
-            createdAt: new Date().toISOString()
-          });
+          createOutput("email", "Email Draft", localResult.response);
         } else if (localResult.response.includes("TASK CREATED")) {
-          saveOutput({
-            id: crypto.randomUUID(),
-            type: "task",
-            title: "Task Created",
-            content: localResult.response,
-            createdAt: new Date().toISOString()
-          });
+          createOutput("task", "Task Created", localResult.response);
         }
 
         // Save associated task if provided
         if (localResult.task) {
-          saveTask(localResult.task);
+          createTask(
+            localResult.task.title,
+            localResult.task.description,
+            localResult.task.type,
+            localResult.task.priority,
+            localResult.task.dueDate
+          );
         }
 
         setIsLoading(false);
@@ -589,13 +572,7 @@ export default function ChatContent() {
           title = "Task Created";
         }
 
-        saveOutput({
-          id: crypto.randomUUID(),
-          type: outputType,
-          title: title,
-          content: data.response,
-          createdAt: new Date().toISOString()
-        });
+        createOutput(outputType, title, data.response);
       }
     } catch (error) {
       console.error("Error:", error);

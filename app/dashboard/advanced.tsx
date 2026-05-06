@@ -5,7 +5,8 @@ import Link from "next/link";
 import type { OnboardingData } from "@/lib/onboarding";
 import { generateSmartSuggestions, generateDailyBrief, type DashboardSuggestion, type DailyBrief } from "@/lib/dashboardSuggestions";
 import { loadOnboardingProfile, initFirebaseOnStartup } from "@/lib/firebase";
-import { getRecentOutputs, getPendingTasks, getActivityFeed, type SavedOutput, type Task } from "@/lib/assistantMemory";
+import { getDashboardSummary } from "@/lib/assistantActions";
+import type { SavedOutput, Task, ActivityFeedItem } from "@/lib/assistantTypes";
 
 export default function AdvancedDashboardPage() {
   const [profile, setProfile] = useState<OnboardingData | null>(null);
@@ -17,7 +18,7 @@ export default function AdvancedDashboardPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [recentOutputs, setRecentOutputs] = useState<SavedOutput[]>([]);
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
-  const [activityFeed, setActivityFeed] = useState<any[]>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
 
   useEffect(() => {
     // Initialize Firebase on startup
@@ -45,10 +46,11 @@ export default function AdvancedDashboardPage() {
           }
         }
 
-        // Load recent outputs and tasks
-        setRecentOutputs(getRecentOutputs(5));
-        setPendingTasks(getPendingTasks());
-        setActivityFeed(getActivityFeed(5));
+        // Load dashboard summary from unified state
+        const summary = getDashboardSummary();
+        setRecentOutputs(summary.recentOutputs);
+        setPendingTasks(summary.pendingTasks);
+        setActivityFeed(summary.activityFeed);
       })
       .catch((error) => {
         const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
