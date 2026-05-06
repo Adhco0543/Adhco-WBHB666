@@ -143,7 +143,7 @@ export default function AdvancedDashboardPage() {
           <Link className="back" href="/">
             ← Home
           </Link>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
             <Link className="button" href="/quotes">
               💰 Quotes
             </Link>
@@ -152,6 +152,12 @@ export default function AdvancedDashboardPage() {
             </Link>
             <Link className="button" href="/tasks">
               📋 Tasks
+            </Link>
+            <Link className="button ghost" href="/activity">
+              📊 Activity
+            </Link>
+            <Link className="button ghost" href="/assistant-settings">
+              🤖 AI Settings
             </Link>
             <Link className="button ghost" href="/settings">
               ⚙️ Settings
