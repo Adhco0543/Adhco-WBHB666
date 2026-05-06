@@ -174,6 +174,10 @@ export function addActivityFeedItem(
   return activityItem;
 }
 
+export function getActivityFeed(): ActivityFeedItem[] {
+  return storage.getActivityFeed(1000);
+}
+
 // ============================================================================
 // Dashboard / Summary Actions
 // ============================================================================

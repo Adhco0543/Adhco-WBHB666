@@ -23,6 +23,12 @@ export interface OnboardingProfile {
   yearsInBusiness: number;
   specializations: string[];
   completedAt: string;
+  // Assistant Settings Fields
+  industryFocus?: string[];
+  responseStyle?: "professional" | "casual" | "formal" | "brief";
+  defaultLanguage?: string;
+  enableVoiceInput?: boolean;
+  keyServices?: string[];
 }
 
 // ============================================================================
