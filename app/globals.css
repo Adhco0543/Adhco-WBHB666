@@ -158,3 +158,114 @@ pre {
   padding: 12px;
   overflow-x: auto;
 }
+
+/* ============================================================================
+   DARK MODE
+   ============================================================================ */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark :root {
+  color: #e5e7eb;
+  background: #111827;
+}
+
+html.dark body {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+html.dark .card {
+  background: #1f2937;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
+  border: 1px solid #374151;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+html.dark select::placeholder {
+  color: #9ca3af;
+}
+
+html.dark .eyebrow {
+  color: #9ca3af;
+}
+
+html.dark .button.ghost {
+  background: #374151;
+  color: #e5e7eb;
+}
+
+html.dark .button.ghost:hover {
+  background: #4b5563;
+}
+
+html.dark .back {
+  color: #d1d5db;
+}
+
+html.dark .chip {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+html.dark .chip.active {
+  background: #1e40af;
+  border-color: #2563eb;
+}
+
+html.dark .helperText,
+html.dark .eyebrow {
+  color: #9ca3af;
+}
+
+html.dark .errorText {
+  color: #f87171;
+}
+
+html.dark .progress {
+  background: #374151;
+}
+
+html.dark pre {
+  background: #1f2937;
+  border-color: #374151;
+  color: #e5e7eb;
+}
+
+html.dark main,
+html.dark section {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #f3f4f6;
+}
+
+html.dark label {
+  color: #e5e7eb;
+}
+
+html.dark a {
+  color: #60a5fa;
+}
+
+html.dark a:hover {
+  color: #93c5fd;
+}

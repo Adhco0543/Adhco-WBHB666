@@ -95,6 +95,25 @@ export default function CustomizationPage() {
     const updated = { ...preferences, [key]: value };
     setPreferencesState(updated);
     updatePreferences(updated);
+    
+    // If theme changed, apply it immediately
+    if (key === "theme") {
+      const htmlElement = document.documentElement;
+      if (value === "dark") {
+        htmlElement.classList.add("dark");
+      } else if (value === "light") {
+        htmlElement.classList.remove("dark");
+      } else if (value === "auto") {
+        // Auto mode: check system preference
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (prefersDark) {
+          htmlElement.classList.add("dark");
+        } else {
+          htmlElement.classList.remove("dark");
+        }
+      }
+    }
+    
     setSaveMessage("✓ Saved");
     setTimeout(() => setSaveMessage(""), 2000);
   };
