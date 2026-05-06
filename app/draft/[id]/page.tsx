@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import type { SavedOutput } from "@/lib/assistantMemory";
-import { getOutput, updateOutput, deleteOutput } from "@/lib/assistantMemory";
+import { getOutput, editOutput, removeOutput } from "@/lib/assistantActions";
+import type { SavedOutput } from "@/lib/assistantTypes";
 
 export default function DraftPage() {
   const params = useParams();
@@ -47,7 +47,7 @@ export default function DraftPage() {
   const handleSave = () => {
     setIsSaving(true);
     setTimeout(() => {
-      updateOutput(id, {
+      editOutput(id, {
         title: editedTitle,
         content: editedContent
       });
@@ -74,7 +74,7 @@ export default function DraftPage() {
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this draft?")) {
-      deleteOutput(id);
+      removeOutput(id);
       window.location.href = "/dashboard";
     }
   };
