@@ -231,6 +231,7 @@ export interface OutputCustomization {
   templates: CustomTemplate[];
   workflows: CustomWorkflow[];
   defaultTemplate?: Record<OutputType, string>; // templateId for each type
+  toolConfigs?: Record<string, Record<string, any>>; // tool configurations
   createdAt: string;
   updatedAt: string;
 }

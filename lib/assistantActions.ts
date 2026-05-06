@@ -456,6 +456,14 @@ export function getSmartSuggestions() {
 // ============================================================================
 // Customization & Preferences Actions
 // ============================================================================
+export function getCustomization(): any {
+  return storage.getCustomization();
+}
+
+export function saveCustomization(customization: any): void {
+  storage.saveCustomization(customization);
+}
+
 export function getVisibleActions(outputType: SavedOutput["type"]) {
   const visibility = storage.getActionVisibility();
   return visibility[outputType] || [];
