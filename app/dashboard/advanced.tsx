@@ -144,6 +144,9 @@ export default function AdvancedDashboardPage() {
             ← Home
           </Link>
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link className="button" href="/outputs">
+              📂 Outputs
+            </Link>
             <Link className="button" href="/quotes">
               💰 Quotes
             </Link>

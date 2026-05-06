@@ -191,12 +191,20 @@ export default function QuotesPage() {
                         textAlign: "center",
                         fontSize: "0.85rem",
                         fontWeight: "500",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "background 0.2s",
                       }}
                     >
                       View
                     </Link>
                     <button
-                      onClick={() => handleDelete(quote.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDelete(quote.id);
+                      }}
+                      type="button"
                       style={{
                         padding: "0.5rem 0.75rem",
                         background: "#ef4444",
@@ -206,7 +214,9 @@ export default function QuotesPage() {
                         cursor: "pointer",
                         fontWeight: "500",
                         fontSize: "0.85rem",
+                        transition: "background 0.2s",
                       }}
+                      onMouseDown={(e) => e.preventDefault()}
                     >
                       Delete
                     </button>

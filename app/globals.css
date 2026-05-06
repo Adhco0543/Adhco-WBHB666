@@ -269,3 +269,34 @@ html.dark a {
 html.dark a:hover {
   color: #93c5fd;
 }
+
+html.dark button,
+html.dark .button {
+  background: #2563eb;
+  color: white;
+  border: 1px solid #1e40af;
+}
+
+html.dark button:hover,
+html.dark .button:hover {
+  background: #1d4ed8;
+}
+
+html.dark button:disabled,
+html.dark .button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+html.dark button.ghost,
+html.dark .button.ghost {
+  background: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+html.dark button.ghost:hover,
+html.dark .button.ghost:hover {
+  background: #4b5563;
+  color: #f3f4f6;
+}
