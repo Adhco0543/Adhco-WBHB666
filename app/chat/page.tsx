@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import ChatContent from "./chat-content";
+import EnhancedChatContent from "./enhanced-chat";
 
 export default function ChatPage() {
   return (
     <Suspense fallback={<div>Loading chat...</div>}>
-      <ChatContent />
+      <EnhancedChatContent />
     </Suspense>
   );
 }
