@@ -26,17 +26,22 @@ type ConversationState = {
 };
 
 const roleSystemPrompts: Record<string, string> = {
-  contractor: `You are a knowledgeable job-site assistant helping a contractor. You think like someone who understands quotes, materials lists, labor estimates, job scheduling, and customer follow-ups. Be practical, specific, and focused on actionable next steps. Ask clarifying questions when needed. Keep responses concise but helpful.`,
+  contractor: `You are a knowledgeable personal assistant who can answer general questions as well as help a contractor. For work topics, think like someone who understands quotes, materials lists, labor estimates, job scheduling, and customer follow-ups. For non-work topics, answer naturally and helpfully without forcing the conversation back to work. Be practical, specific, and focused on useful next steps. Ask clarifying questions when needed. Keep responses concise but helpful.`,
 
-  business_owner: `You are a business operations assistant. You help with client management, proposals, follow-ups, task prioritization, and business growth strategies. Think strategically about efficiency and growth. Be encouraging and focused on results.`,
+  business_owner: `You are a helpful personal assistant who can answer general questions as well as business questions. You help with client management, proposals, follow-ups, task prioritization, and business growth strategies when those topics come up. For non-work topics, answer directly and naturally without steering back to business. Think clearly, be encouraging, and focus on useful answers.`,
 
-  stay_at_home_parent: `You are a household assistant. You help organize routines, meal planning, appointments, budgeting, and reminders. Be warm, supportive, and practical. Understand the complexity of managing a household and multiple priorities. Offer solutions that save time and reduce stress.`,
+  stay_at_home_parent: `You are a helpful personal assistant who can answer general questions as well as household questions. You help organize routines, meal planning, appointments, budgeting, and reminders when those topics come up. For non-household topics, answer directly and naturally. Be warm, supportive, and practical.`,
 
-  freelancer: `You are a freelance work assistant. You help manage clients, track deadlines, create invoices, build proposals, and handle project follow-ups. Be detail-oriented and focused on keeping projects moving forward and cash flowing.`,
+  freelancer: `You are a helpful personal assistant who can answer general questions as well as freelance work questions. You help manage clients, track deadlines, create invoices, build proposals, and handle project follow-ups when those topics come up. For non-work topics, answer directly and naturally. Be detail-oriented and useful.`,
 
-  student: `You are a study assistant and academic coach. You help organize assignments, build study plans, manage deadlines, prepare for exams, and stay on top of coursework. Be encouraging and help break complex tasks into manageable steps.`,
+  student: `You are a helpful personal assistant who can answer general questions as well as school questions. You help organize assignments, build study plans, manage deadlines, prepare for exams, and stay on top of coursework when those topics come up. For non-school topics, answer directly and naturally. Be encouraging and clear.`,
 
-  other: `You are a helpful personal assistant. You adapt to the user's needs and help with planning, organizing, task tracking, and getting things done. Be flexible and responsive to whatever they need.`
+  other: `You are a helpful general-purpose personal assistant. You can answer questions about everyday life, work, learning, planning, technology, writing, and ideas. Be flexible, direct, and responsive to whatever the user needs.`
+};
+
+type ChatProviderMessage = {
+  role: "user" | "assistant";
+  content: string;
 };
 
 // Extract conversation state from message history
@@ -118,6 +123,8 @@ export async function POST(request: Request) {
     const systemPrompt = `${baseSystemPrompt}${profileContext}${stateContext}
 
 Behavior Guidelines:
+- GENERAL QUESTIONS: Answer any ordinary question directly, whether or not it is about work
+- DON'T FORCE WORK CONTEXT: Use project/work context only when it helps; otherwise ignore it
 - UNDERSTAND STATE: Remember what task we're working on and what info you already have
 - AVOID REPETITION: Don't ask for info you already collected
 - PROGRESS FOCUS: Move the conversation forward based on the current stage
@@ -142,32 +149,7 @@ Behavior Guidelines:
       content: message
     });
 
-    // Call Ollama API
-    const ollamaResponse = await fetch(`${ollamaUrl}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "mistral",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages
-        ],
-        stream: false
-      })
-    });
-
-    if (!ollamaResponse.ok) {
-      return Response.json(
-        { 
-          error: "Ollama API error",
-          details: `Make sure Ollama is running: ollama serve`
-        },
-        { status: 500 }
-      );
-    }
-
-    const ollamaData = await ollamaResponse.json() as { message?: { content: string } };
-    const assistantMessage = ollamaData.message?.content || "I couldn't generate a response. Please check if Ollama is running.";
+    const assistantMessage = await generateAssistantResponse(systemPrompt, messages, ollamaUrl);
 
     return Response.json({
       response: assistantMessage,
@@ -188,4 +170,141 @@ Behavior Guidelines:
       { status: 500 }
     );
   }
+}
+
+async function generateAssistantResponse(
+  systemPrompt: string,
+  messages: ChatProviderMessage[],
+  ollamaUrl: string
+): Promise<string> {
+  const errors: string[] = [];
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      return await generateWithAnthropic(systemPrompt, messages);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  if (process.env.GROQ_API_KEY) {
+    try {
+      return await generateWithGroq(systemPrompt, messages);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  try {
+    return await generateWithOllama(systemPrompt, messages, ollamaUrl);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+  }
+
+  throw new Error(`No AI provider responded. ${errors.join(" | ")}`);
+}
+
+async function generateWithAnthropic(
+  systemPrompt: string,
+  messages: ChatProviderMessage[]
+): Promise<string> {
+  const anthropicMessages: ChatProviderMessage[] =
+    messages[0]?.role === "assistant"
+      ? [
+          {
+            role: "user",
+            content: "Use the existing conversation as context and answer my latest question.",
+          },
+          ...messages,
+        ]
+      : messages;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY || "",
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-20241022",
+      max_tokens: 700,
+      system: systemPrompt,
+      messages: anthropicMessages,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Anthropic API error: ${response.status}`);
+  }
+
+  const data = await response.json() as {
+    content?: Array<{ type: string; text?: string }>;
+  };
+
+  const text = data.content?.find((item) => item.type === "text")?.text;
+  if (!text) throw new Error("Anthropic returned no text response");
+  return text;
+}
+
+async function generateWithGroq(
+  systemPrompt: string,
+  messages: ChatProviderMessage[]
+): Promise<string> {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages,
+      ],
+      temperature: 0.7,
+      max_tokens: 700,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Groq API error: ${response.status}`);
+  }
+
+  const data = await response.json() as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Groq returned no text response");
+  return text;
+}
+
+async function generateWithOllama(
+  systemPrompt: string,
+  messages: ChatProviderMessage[],
+  ollamaUrl: string
+): Promise<string> {
+  const ollamaResponse = await fetch(`${ollamaUrl}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "mistral",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages,
+      ],
+      stream: false,
+    }),
+  });
+
+  if (!ollamaResponse.ok) {
+    throw new Error("Ollama API error. Make sure Ollama is running: ollama serve");
+  }
+
+  const ollamaData = await ollamaResponse.json() as { message?: { content: string } };
+  const text = ollamaData.message?.content;
+  if (!text) throw new Error("Ollama returned no text response");
+  return text;
 }
