@@ -402,7 +402,7 @@ function WorkspaceChatContent() {
               <div
                 className="chat-bubble"
                 style={{
-                  maxWidth: "70%",
+                  maxWidth: "min(85%, 600px)",
                   padding: spacing[4],
                   borderRadius: "8px",
                   backgroundColor: msg.role === "user" ? colors.primary[500] : colors.white,

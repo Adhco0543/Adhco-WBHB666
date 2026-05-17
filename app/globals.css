@@ -476,6 +476,27 @@ section {
     display: none !important;
   }
 
+  /* TopBar responsive styling */
+  header {
+    margin-left: 0 !important;
+    padding: 12px 16px !important;
+  }
+
+  header h1 {
+    font-size: 1.35rem !important;
+  }
+
+  header p {
+    font-size: 0.85rem !important;
+  }
+
+  header button {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+
   .workspace-sidebar,
   .chat-sidebar {
     max-height: 28dvh !important;
@@ -543,6 +564,355 @@ section {
 
   .workspace-tab-button {
     font-size: 0.85rem !important;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.2rem !important;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+  }
+
+  .button {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 48px !important;
+    min-width: 44px !important;
+    font-size: 16px !important;
+    padding: 12px 12px !important;
+  }
+
+  textarea {
+    min-height: 120px !important;
+  }
+
+  .card {
+    border-radius: 8px !important;
+    padding: 12px !important;
+  }
+
+  .page {
+    padding: 12px !important;
+  }
+
+  /* Touch-friendly spacing */
+  button,
+  a {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .chip {
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+
+  .modal-card {
+    border-radius: 12px !important;
+    max-height: calc(100dvh - 12px) !important;
+  }
+}
+
+/* ========== MODERN ANIMATIONS ========== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.4s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-scale-out {
+  animation: scaleOut 0.3s ease-in;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.6s ease-out;
+}
+
+.animate-gradient-shift {
+  animation: gradientShift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* Dark mode transitions */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Extra small phones - 320px and below */
+@media (max-width: 320px) {
+  .page {
+    padding: 8px !important;
+  }
+
+  .card {
+    padding: 8px !important;
+    margin: 4px !important;
+  }
+
+  h1 {
+    font-size: 1.25rem !important;
+  }
+
+  h2 {
+    font-size: 1rem !important;
+  }
+
+  .button,
+  input,
+  select,
+  textarea {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    width: 100% !important;
+  }
+
+  .eyebrow {
+    font-size: 11px !important;
+  }
+
+  .actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+}
+
+/* Landscape mode optimizations */
+@media (max-width: 1024px) and (orientation: landscape) {
+  .page {
+    min-height: 100dvh !important;
+    padding: 12px !important;
+  }
+
+  .card {
+    max-height: calc(100dvh - 24px) !important;
+    overflow-y: auto !important;
+  }
+
+  h1 {
+    font-size: 1.25rem !important;
+  }
+
+  .button {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+  }
+
+  input,
+  textarea {
+    min-height: 40px !important;
+  }
+}
+
+/* Portrait mode optimizations */
+@media (max-width: 768px) and (orientation: portrait) {
+  .hide-on-mobile-portrait {
+    display: none !important;
+  }
+
+  .button {
+    min-height: 48px !important;
+  }
+}
+
+/* Touch device styles */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  button:active {
+    opacity: 0.8 !important;
+  }
+
+  .button:hover {
+    transform: none !important;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  }
+}
+
+/* Safe area support for notches */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .page {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .card {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* Fixed positioning safety */
+@media (max-width: 768px) {
+  [style*="position: fixed"],
+  [style*="position: sticky"] {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }
 

@@ -91,7 +91,28 @@ export default function EnhancedChatContent() {
         setProfile(parsed as OnboardingProfile);
       } catch (e) {
         console.error("Failed to parse profile", e);
+        // Fallback to default profile
+        setProfile({
+          id: "default-profile",
+          role: "general_contractor",
+          businessName: "My Business",
+          businessType: "Construction",
+          yearsInBusiness: 1,
+          specializations: [],
+          completedAt: new Date().toISOString(),
+        });
       }
+    } else {
+      // No saved profile - use default for demo
+      setProfile({
+        id: "default-profile",
+        role: "general_contractor",
+        businessName: "My Business",
+        businessType: "Construction",
+        yearsInBusiness: 1,
+        specializations: [],
+        completedAt: new Date().toISOString(),
+      });
     }
   }, []);
 
@@ -412,7 +433,7 @@ What else can I help with?`,
           >
             <div
               style={{
-                maxWidth: "70%",
+                maxWidth: "min(85%, 600px)",
                 padding: spacing[4],
                 borderRadius: "8px",
                 backgroundColor:

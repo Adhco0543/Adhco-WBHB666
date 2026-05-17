@@ -156,6 +156,32 @@ export function TopBar({
   subtitle?: string;
   actions?: React.ReactNode;
 }) {
+  const handleMinimize = () => {
+    // Collapse sidebar or minimize view
+    const sidebar = document.querySelector('aside[role="navigation"]') as HTMLElement;
+    if (sidebar) {
+      sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+    }
+  };
+
+  const handleMaximize = () => {
+    // Expand to fullscreen
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.log('Fullscreen request failed:', err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleExit = () => {
+    // Navigate back home
+    if (window.confirm("Exit dashboard? You'll be taken back to the home page.")) {
+      window.location.href = '/';
+    }
+  };
+
   return (
     <header
       style={{
@@ -194,7 +220,92 @@ export function TopBar({
           </p>
         )}
       </div>
-      {actions && <div style={{ display: "flex", gap: spacing[3] }}>{actions}</div>}
+      <div style={{ display: "flex", gap: spacing[3], alignItems: "center" }}>
+        {actions && <div style={{ display: "flex", gap: spacing[3] }}>{actions}</div>}
+        
+        {/* Window Control Buttons */}
+        <div style={{ display: "flex", gap: spacing[2], marginLeft: spacing[4] }}>
+          <button
+            onClick={handleMinimize}
+            title="Minimize"
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "4px",
+              border: `1px solid ${colors.neutral[300]}`,
+              backgroundColor: colors.neutral[50],
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "16px",
+              transition: "all 150ms ease",
+              color: colors.neutral[700],
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.neutral[200];
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.neutral[50];
+            }}
+          >
+            −
+          </button>
+          <button
+            onClick={handleMaximize}
+            title="Maximize/Fullscreen"
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "4px",
+              border: `1px solid ${colors.neutral[300]}`,
+              backgroundColor: colors.neutral[50],
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "16px",
+              transition: "all 150ms ease",
+              color: colors.neutral[700],
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.neutral[200];
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.neutral[50];
+            }}
+          >
+            □
+          </button>
+          <button
+            onClick={handleExit}
+            title="Exit Dashboard"
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "4px",
+              border: `1px solid ${colors.error || '#ef4444'}`,
+              backgroundColor: "#fef2f2",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "16px",
+              transition: "all 150ms ease",
+              color: colors.error || '#ef4444',
+              fontWeight: "bold",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#fee2e2";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#fef2f2";
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      </div>
     </header>
   );
 }
