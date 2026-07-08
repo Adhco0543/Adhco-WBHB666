@@ -1,27 +1,20 @@
+export type UserRole =
+  | ""
+  | "business_owner"
+  | "contractor"
+  | "stay_at_home_parent"
+  | "freelancer"
+  | "student"
+  | "other";
+
 export type TeamSize = "solo" | "2_5" | "6_15" | "16_plus";
-export type RevenueModel = "appointments" | "projects" | "products" | "subscription" | "mixed";
-export type WorkMode = "on_site" | "client_site" | "hybrid";
+export type RevenueModel = "appointments" | "projects" | "products" | "subscription" | "mixed" | "none";
+export type WorkMode = "on_site" | "client_site" | "hybrid" | "home" | "remote";
 
-<<<<<<< HEAD
 export type OnboardingData = {
   businessName: string;
+  role: UserRole;
   industry: string;
-=======
-export const INDUSTRIES = [
-  "carpentry",
-  "salon",
-  "auto_repair",
-  "restaurant",
-  "retail",
-  "other"
-] as const;
-
-export type Industry = (typeof INDUSTRIES)[number];
-
-export type OnboardingData = {
-  businessName: string;
-  industry: Industry | "";
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
   teamSize: TeamSize;
   revenueModel: RevenueModel;
   workMode: WorkMode;
@@ -33,6 +26,7 @@ export type OnboardingData = {
 
 export const defaultOnboardingData: OnboardingData = {
   businessName: "",
+  role: "",
   industry: "",
   teamSize: "solo",
   revenueModel: "projects",
@@ -43,71 +37,111 @@ export const defaultOnboardingData: OnboardingData = {
   roleAnswers: {}
 };
 
-<<<<<<< HEAD
-=======
-export const TEAM_SIZE_OPTIONS: { value: TeamSize; label: string }[] = [
-  { value: "solo", label: "Just me" },
-  { value: "2_5", label: "2-5" },
-  { value: "6_15", label: "6-15" },
-  { value: "16_plus", label: "16+" }
+export const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: "business_owner", label: "Business owner" },
+  { value: "contractor", label: "Contractor / tradesperson" },
+  { value: "stay_at_home_parent", label: "Stay-at-home parent" },
+  { value: "freelancer", label: "Freelancer" },
+  { value: "student", label: "Student" },
+  { value: "other", label: "Other" }
 ];
 
-export const REVENUE_MODEL_OPTIONS: { value: RevenueModel; label: string }[] = [
-  { value: "appointments", label: "Appointments" },
-  { value: "projects", label: "Projects/jobs" },
-  { value: "products", label: "Product sales" },
-  { value: "subscription", label: "Subscription" },
-  { value: "mixed", label: "Mixed" }
-];
+export const PAIN_POINTS_BY_ROLE: Record<Exclude<UserRole, "">, string[]> = {
+  business_owner: [
+    "quotes",
+    "scheduling",
+    "client_communication",
+    "followups",
+    "reporting",
+    "team_coordination"
+  ],
+  contractor: [
+    "quotes",
+    "materials",
+    "client_communication",
+    "inventory",
+    "followups",
+    "job_tracking"
+  ],
+  stay_at_home_parent: [
+    "household_schedule",
+    "meal_planning",
+    "appointments",
+    "family_tasks",
+    "budgeting",
+    "reminders"
+  ],
+  freelancer: [
+    "client_communication",
+    "invoicing",
+    "deadlines",
+    "project_tracking",
+    "followups",
+    "content_planning"
+  ],
+  student: [
+    "study_schedule",
+    "assignments",
+    "deadlines",
+    "notes",
+    "exam_prep",
+    "time_management"
+  ],
+  other: [
+    "scheduling",
+    "tasks",
+    "followups",
+    "planning",
+    "notes",
+    "organization"
+  ]
+};
 
-export const WORK_MODE_OPTIONS: { value: WorkMode; label: string }[] = [
-  { value: "on_site", label: "At a location/shop" },
-  { value: "client_site", label: "At client sites" },
-  { value: "hybrid", label: "Both" }
-];
-
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
-export const PAIN_POINTS = [
-  "scheduling",
-  "quotes",
-  "invoicing",
-  "client_communication",
-  "team_coordination",
-  "inventory",
-  "followups",
-  "reporting"
+export const TOOLS = [
+  "google_calendar",
+  "quickbooks",
+  "stripe",
+  "square",
+  "sheets",
+  "notes_app",
+  "none"
 ] as const;
 
-export const TOOLS = ["google_calendar", "quickbooks", "stripe", "square", "sheets", "none"] as const;
-
-<<<<<<< HEAD
-export const industrySpecificQuestions: Record<string, { key: string; label: string; options: string[] }[]> = {
-=======
 export type RoleQuestion = {
   key: string;
   label: string;
   options: string[];
 };
 
-export const industrySpecificQuestions: Partial<Record<Industry, RoleQuestion[]>> = {
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
-  carpentry: [
+export const roleSpecificQuestions: Partial<Record<Exclude<UserRole, "">, RoleQuestion[]>> = {
+  business_owner: [
+    { key: "needs_quotes", label: "Do you create quotes or estimates?", options: ["yes", "no"] },
+    { key: "has_clients", label: "Do you communicate with clients often?", options: ["yes", "no"] },
+    { key: "team_help", label: "Do you manage a team?", options: ["yes", "no"] }
+  ],
+  contractor: [
     { key: "estimates", label: "Do you create estimates before jobs?", options: ["yes", "no"] },
-    {
-      key: "material_changes",
-      label: "How often do material costs change?",
-      options: ["rarely", "sometimes", "often"]
-    },
+    { key: "material_changes", label: "How often do material costs change?", options: ["rarely", "sometimes", "often"] },
     { key: "job_stages", label: "Do your jobs happen in stages?", options: ["yes", "no"] }
   ],
-  salon: [
-    { key: "appointments", label: "Do you rely on appointments?", options: ["yes", "no"] },
-    { key: "no_show_reminders", label: "Do you need no-show reminders?", options: ["yes", "no"] },
-    { key: "product_sales", label: "Do you sell add-on products?", options: ["yes", "no"] }
+  stay_at_home_parent: [
+    { key: "family_schedule", label: "Do you manage a family schedule?", options: ["yes", "no"] },
+    { key: "meal_planning", label: "Would meal planning help you?", options: ["yes", "no"] },
+    { key: "budget_tracking", label: "Do you want help tracking household spending?", options: ["yes", "no"] }
+  ],
+  freelancer: [
+    { key: "client_projects", label: "Do you manage multiple client projects?", options: ["yes", "no"] },
+    { key: "invoice_help", label: "Do you need invoice or payment reminders?", options: ["yes", "no"] },
+    { key: "deadline_tracking", label: "Do deadlines pile up?", options: ["yes", "no"] }
+  ],
+  student: [
+    { key: "classes", label: "Are you managing multiple classes?", options: ["yes", "no"] },
+    { key: "exam_prep", label: "Do you want study and exam prep help?", options: ["yes", "no"] },
+    { key: "assignment_tracking", label: "Do you need assignment reminders?", options: ["yes", "no"] }
+  ],
+  other: [
+    { key: "main_goal", label: "What kind of help do you want most?", options: ["planning", "tasks", "reminders", "organization"] }
   ]
 };
-<<<<<<< HEAD
-=======
 
 export const formatLabel = (value: string) => value.replaceAll("_", " ");
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638

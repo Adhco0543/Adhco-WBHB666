@@ -6,32 +6,40 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "next": "^15.2.3",
-=======
-    "@tailwindcss/postcss": "^4.2.2",
-    "next": "15.2.0",
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
+    "@stripe/stripe-js": "^9.5.0",
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/supabase-js": "^2.105.4",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.20",
+    "firebase": "^12.12.0",
+    "framer-motion": "^11.0.3",
+    "groq-sdk": "^1.1.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "next": "^16.2.4",
+    "papaparse": "^5.5.3",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-big-calendar": "^1.19.4",
+    "react-dom": "19.0.0",
+    "resend": "^6.12.3",
+    "stripe": "^22.1.1",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@types/node": "22.13.10",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
-<<<<<<< HEAD
     "eslint": "^9.39.4",
-    "eslint-config-next": "^15.2.3",
-=======
-    "autoprefixer": "^10.5.0",
-    "eslint": "9.21.0",
-    "eslint-config-next": "15.2.0",
-    "postcss": "^8.5.10",
-    "tailwindcss": "^4.2.2",
->>>>>>> f1ee28d4de6942316101091dbedc9f25d2af4638
+    "eslint-config-next": "^16.2.4",
     "typescript": "5.8.2"
+  },
+  "comments": {
+    "phase-2-dependencies": "Add these when starting Phase 2 integrations: stripe, @slack/bolt, resend, quickbooks-api, ical-generator",
+    "phase-3-dependencies": "Add for Phase 3 ML features: xgboost-learn, tensorflow.js, or scikit-learn (via Python microservice)"
   }
 }
